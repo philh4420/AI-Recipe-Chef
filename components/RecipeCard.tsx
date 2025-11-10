@@ -8,8 +8,8 @@ const ClockIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const HeartIcon: React.FC<{ className?: string }> = ({ className }) => (
-     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
     </svg>
 );
 
@@ -25,10 +25,9 @@ const PrintIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
-
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div>
-        <h3 className="text-xl font-semibold text-[--card-foreground] mb-3 border-b-2 border-[--primary]/30 pb-2">{title}</h3>
+        <h3 className="text-lg font-semibold text-[--foreground] mb-3">{title}</h3>
         {children}
     </div>
 );
@@ -74,43 +73,45 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
     };
 
     return (
-        <div ref={cardRef} className="bg-[--card] rounded-2xl shadow-lg animate-fade-in flex flex-col">
+        <div ref={cardRef} className="bg-[--card] border border-[--border] rounded-2xl shadow-lg animate-fade-in flex flex-col overflow-hidden">
             <div className='p-8 flex-grow'>
-                <h2 className="text-3xl font-bold text-[--card-foreground] mb-2">{recipe.recipeName}</h2>
+                <h2 className="text-2xl font-bold text-[--foreground] mb-2">{recipe.recipeName}</h2>
                 <p className="text-[--muted-foreground] mb-6">{recipe.description}</p>
                 
-                <div className="flex flex-wrap gap-4 mb-8 text-sm text-[--accent-foreground]">
-                    <div className="flex items-center gap-2 bg-[--accent] p-3 rounded-lg">
+                <div className="flex flex-wrap gap-x-6 gap-y-3 mb-8 text-sm text-[--foreground]">
+                    <div className="flex items-center gap-2">
                         <ClockIcon className="h-5 w-5 text-[--primary]" />
                         <div>
-                            <span className="font-semibold">Prep Time:</span> {recipe.prepTime}
+                            <span className="font-semibold">Prep:</span> {recipe.prepTime}
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 bg-[--accent] p-3 rounded-lg">
+                    <div className="flex items-center gap-2">
                         <ClockIcon className="h-5 w-5 text-[--primary]" />
                         <div>
-                            <span className="font-semibold">Cook Time:</span> {recipe.cookTime}
+                            <span className="font-semibold">Cook:</span> {recipe.cookTime}
                         </div>
                     </div>
                 </div>
+                
+                <hr className="border-[--border] my-6" />
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-1">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-4">
                         <Section title="Ingredients">
-                            <ul className="space-y-2 list-disc list-inside text-[--card-foreground]">
+                            <ul className="space-y-2 list-disc list-inside text-[--foreground]">
                                 {recipe.ingredients.map((ingredient, index) => (
                                     <li key={index}>{ingredient}</li>
                                 ))}
                             </ul>
                         </Section>
                     </div>
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-8">
                         <Section title="Instructions">
-                            <ol className="space-y-4 text-[--card-foreground]">
+                            <ol className="space-y-4 text-[--foreground]">
                                 {recipe.instructions.map((step, index) => (
-                                    <li key={index} className="flex items-start">
-                                        <span className="mr-3 flex-shrink-0 bg-[--primary] text-[--primary-foreground] font-bold h-6 w-6 rounded-full text-sm flex items-center justify-center">{index + 1}</span>
-                                        <span>{step}</span>
+                                    <li key={index} className="flex">
+                                        <span className="mr-4 flex-shrink-0 bg-[--primary] text-[--primary-foreground] font-bold h-6 w-6 rounded-full text-xs flex items-center justify-center">{index + 1}</span>
+                                        <span className="flex-1">{step}</span>
                                     </li>
                                 ))}
                             </ol>
@@ -118,52 +119,53 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
                     </div>
                 </div>
             </div>
-             <div className="p-6 bg-[--muted]/50 rounded-b-2xl border-t border-[--border] no-print">
-                 <div className="flex gap-4 items-center">
-                    <div className="flex-grow">
-                        {isSavedView && onDelete ? (
-                             <button
-                                onClick={handleDelete}
-                                className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-[--destructive] bg-transparent hover:bg-[--destructive]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--destructive] focus:ring-offset-[--card] transition-colors"
-                            >
-                                <TrashIcon className="h-5 w-5" />
-                                Delete Recipe
-                            </button>
-                        ) : onSave && (
-                            <button
-                                onClick={handleSave}
-                                disabled={isSaving || isSaved}
-                                className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-[--primary] rounded-md shadow-sm text-sm font-medium text-[--primary] bg-transparent hover:bg-[--primary]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {isSaving ? (
-                                   <>
-                                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Saving...
-                                   </>
-                                ) : isSaved ? (
-                                    <>
-                                       <HeartIcon className="h-5 w-5 text-[--primary]" />
-                                        Saved!
-                                    </>
-                                ) : (
-                                     <>
-                                        <HeartIcon className="h-5 w-5" />
-                                        Save Recipe
-                                    </>
-                                )}
-                            </button>
-                        )}
-                    </div>
+             <div className="p-4 bg-[--muted]/30 border-t border-[--border] no-print">
+                 <div className="flex gap-2 items-center justify-end">
+                    {isSavedView && onDelete ? (
+                         <button
+                            onClick={handleDelete}
+                            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--destructive] bg-transparent hover:bg-[--destructive]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--destructive] focus:ring-offset-[--card] transition-colors"
+                        >
+                            <TrashIcon className="h-4 w-4" />
+                            <span>Delete</span>
+                        </button>
+                    ) : onSave && (
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving || isSaved}
+                            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--primary] bg-transparent hover:bg-[--primary]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {isSaving ? (
+                               <>
+                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Saving...</span>
+                               </>
+                            ) : isSaved ? (
+                                <>
+                                   <HeartIcon className="h-4 w-4 text-[--primary]" />
+                                    <span>Saved</span>
+                                </>
+                            ) : (
+                                 <>
+                                    <HeartIcon className="h-4 w-4" />
+                                    <span>Save Recipe</span>
+                                </>
+                            )}
+                        </button>
+                    )}
+                    
+                    <div className="border-l border-[--border] h-6 mx-2"></div>
+
                     <button
                         onClick={handlePrint}
-                        className="flex-shrink-0 flex items-center justify-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-[--muted-foreground] bg-transparent hover:bg-[--muted] hover:text-[--foreground] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] transition-colors"
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--muted-foreground] bg-transparent hover:bg-[--muted] hover:text-[--foreground] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] transition-colors"
                         aria-label="Print Recipe"
                     >
-                        <PrintIcon className="h-5 w-5" />
-                        <span className="hidden sm:inline">Print</span>
+                        <PrintIcon className="h-4 w-4" />
+                        <span>Print</span>
                     </button>
                 </div>
             </div>

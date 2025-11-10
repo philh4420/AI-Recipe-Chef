@@ -13,12 +13,16 @@ interface RecipeListProps {
 }
 
 const ChefIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2C8.69 2 6 4.69 6 8s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zM12 16c-3.31 0-6 2.69-6 6h12c0-3.31-2.69-6-6-6zm0 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" />
-        <path d="M5 22h14v-2H5v2zm0-4h14v-1.1c0-2.03-3.14-3.9-7-3.9s-7 1.87-7 3.9V18zm0-10c0-1.84 1.66-3.47 4-4.59V8.5c-1.38.44-2.47 1.53-2.9 2.8L5 11.66V8c0-1.65 1.35-3 3-3h8c1.65 0 3 1.35 3 3v3.66l-1.1-.36c-.43-1.27-1.52-2.36-2.9-2.8V3.41c2.34 1.12 4 3.75 4 6.59v8h3v-2h-1v-1.63c.63-.39 1-1.06 1-1.87 0-1.3-.84-2.4-2-2.82V10c0-2.76-2.24-5-5-5H8C5.24 5 3 7.24 3 10v1.18c-1.16.42-2 1.52-2 2.82 0 .81.37 1.48 1 1.87V18H1v2h3v2z" opacity=".3"/>
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
     </svg>
 );
 
+const ErrorIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+    </svg>
+);
 
 export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, error, onClear, onSave, savedRecipeIds }) => {
     
@@ -28,9 +32,10 @@ export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, erro
 
     if (error) {
         return (
-             <div className="mt-12 bg-[--destructive]/10 border-l-4 border-[--destructive] text-[--destructive] p-6 rounded-md shadow-md" role="alert">
-                <h3 className="font-bold text-lg">Oops, something went wrong!</h3>
-                <p className="mt-2">{error}</p>
+             <div className="mt-12 text-center bg-[--card] border border-[--destructive]/50 p-12 rounded-2xl shadow-lg">
+                <ErrorIcon className="mx-auto h-16 w-16 text-[--destructive]" />
+                <h3 className="mt-4 text-xl font-semibold text-[--foreground]">Oops, something went wrong!</h3>
+                <p className="mt-2 text-[--muted-foreground] max-w-md mx-auto">{error}</p>
             </div>
         );
     }
@@ -40,7 +45,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, erro
             <div className="mt-12">
                 <div className="flex justify-between items-center mb-6">
                      <h2 className="text-2xl font-bold text-[--foreground]">
-                        Found <span className="text-[--primary]">{recipes.length}</span> recipes for you
+                        Generated Recipes
                     </h2>
                     <button 
                         onClick={onClear}
@@ -64,7 +69,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, erro
     }
 
     return (
-        <div className="mt-12 text-center bg-[--card] p-12 rounded-2xl shadow-lg">
+        <div className="mt-12 text-center bg-[--card] border border-[--border] p-12 rounded-2xl shadow-lg">
             <ChefIcon className="mx-auto h-16 w-16 text-[--primary]/60" />
             <h3 className="mt-4 text-xl font-semibold text-[--card-foreground]">Ready to Cook?</h3>
             <p className="mt-2 text-[--muted-foreground]">Your next favorite meal is just a click away. Fill out the form above to get started.</p>

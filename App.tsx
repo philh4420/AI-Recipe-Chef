@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { generateRecipes } from './services/geminiService';
 import { addRecipe, deleteRecipe, getRecipes } from './services/firestoreService';
@@ -136,17 +137,16 @@ const App: React.FC = () => {
     
     return (
         <div className="min-h-screen font-sans">
-            <main className="container mx-auto px-4 py-8 md:py-12">
-                <Header 
-                    user={user}
-                    onSignOut={signOutUser}
-                    isDarkMode={isDarkMode} 
-                    toggleDarkMode={toggleDarkMode}
-                    view={view}
-                    setView={setView}
-                />
-
-                <div className="max-w-4xl mx-auto">
+             <Header 
+                user={user}
+                onSignOut={signOutUser}
+                isDarkMode={isDarkMode} 
+                toggleDarkMode={toggleDarkMode}
+                view={view}
+                setView={setView}
+            />
+            <main className="container mx-auto px-4 py-8">
+                <div className="max-w-5xl mx-auto">
                     {view === 'generator' ? (
                         <>
                             <InputForm isLoading={isLoading} onSubmit={handleSubmit} onSurprise={handleSurprise} />

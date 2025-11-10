@@ -25,42 +25,55 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ user, onSignOut, isDarkMode, toggleDarkMode, view, setView }) => {
     
     const navButtonClasses = (buttonView: 'generator' | 'saved') => 
-        `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+        `px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--background] ${
             view === buttonView
-            ? 'bg-[--primary] text-[--primary-foreground]'
-            : 'bg-transparent text-[--muted-foreground] hover:bg-[--muted] hover:text-[--foreground]'
+            ? 'bg-[--primary] text-[--primary-foreground] shadow-sm'
+            : 'text-[--muted-foreground] hover:bg-[--muted] hover:text-[--foreground]'
         }`;
 
     return (
-        <header className="text-center mb-12 relative">
-             <div className="absolute top-0 right-0 flex items-center gap-4">
-                <span className="text-sm text-[--muted-foreground] hidden sm:block">Welcome, {user.displayName?.split(' ')[0]}</span>
-                <button onClick={onSignOut} className="text-sm font-medium text-[--muted-foreground] hover:text-[--primary]">Sign Out</button>
-                <button
-                    onClick={toggleDarkMode}
-                    className="p-2 rounded-full bg-[--card] text-[--foreground] hover:bg-[--muted] focus:outline-none focus:ring-2 focus:ring-[--ring] transition-colors"
-                    aria-label="Toggle dark mode"
-                >
-                    {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-                </button>
+        <header className="sticky top-0 z-40 w-full backdrop-blur flex-none transition-colors duration-500 lg:z-50 lg:border-b lg:border-[--border] bg-[--background]/80">
+            <div className="container mx-auto px-4">
+                <div className="relative flex items-center h-16">
+                    <div className="flex items-center gap-6">
+                        <h1 className="text-xl font-bold text-[--foreground]">
+                            Recipe<span className="text-[--primary]">Genius</span>
+                        </h1>
+                        <nav className="hidden md:flex items-center gap-2 bg-[--card] border border-[--border] p-1 rounded-lg">
+                            <button onClick={() => setView('generator')} className={navButtonClasses('generator')}>
+                                Generator
+                            </button>
+                            <button onClick={() => setView('saved')} className={navButtonClasses('saved')}>
+                                My Recipes
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div className="flex-1 flex items-center justify-end gap-4">
+                        <span className="text-sm text-[--muted-foreground] hidden sm:block">
+                           {user.displayName?.split(' ')[0]}
+                        </span>
+                         <button
+                            onClick={toggleDarkMode}
+                            className="p-2 rounded-full text-[--foreground] hover:bg-[--muted] focus:outline-none focus:ring-2 focus:ring-[--ring] focus:ring-offset-2 focus:ring-offset-[--background] transition-colors"
+                            aria-label="Toggle dark mode"
+                        >
+                            {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+                        </button>
+                        <button onClick={onSignOut} className="text-sm font-medium text-[--muted-foreground] hover:text-[--primary] transition-colors">
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+                 <nav className="md:hidden flex items-center justify-center gap-2 bg-[--card] border border-[--border] p-1 rounded-lg mb-4">
+                    <button onClick={() => setView('generator')} className={`${navButtonClasses('generator')} flex-1`}>
+                        Generator
+                    </button>
+                    <button onClick={() => setView('saved')} className={`${navButtonClasses('saved')} flex-1`}>
+                        My Recipes
+                    </button>
+                </nav>
             </div>
-
-
-             <h1 className="text-4xl md:text-5xl font-extrabold text-[--foreground] tracking-tight pt-12 md:pt-0">
-                AI Recipe <span className="text-[--primary]">Generator</span>
-            </h1>
-            <p className="mt-4 max-w-2xl mx-auto text-lg text-[--muted-foreground]">
-                Turn your pantry into a culinary adventure. Let AI be your sous-chef!
-            </p>
-
-            <nav className="mt-8 flex justify-center gap-2 bg-[--card] p-2 rounded-lg max-w-xs mx-auto shadow-sm">
-                 <button onClick={() => setView('generator')} className={navButtonClasses('generator')}>
-                    Generator
-                </button>
-                <button onClick={() => setView('saved')} className={navButtonClasses('saved')}>
-                    My Recipes
-                </button>
-            </nav>
         </header>
     );
 };
