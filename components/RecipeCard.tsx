@@ -55,9 +55,10 @@ interface RecipeCardProps {
     isSaved?: boolean;
     isSavedView?: boolean;
     isDemo?: boolean;
+    onModify?: (recipe: Recipe, modification: string) => void;
 }
 
-export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete, isSaved, isSavedView, isDemo }) => {
+export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete, isSaved, isSavedView, isDemo, onModify }) => {
     const [isSaving, setIsSaving] = useState(false);
     const [justSaved, setJustSaved] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -107,6 +108,21 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
                 addToast({ message: 'Failed to copy ingredients.', type: 'error' });
             });
     };
+
+    const handleModify = (modification: string) => {
+        if (onModify) {
+            onModify(recipe, modification);
+        }
+    };
+    
+    const ModificationButton: React.FC<{onClick: () => void; children: React.ReactNode}> = ({ onClick, children }) => (
+        <button 
+            onClick={onClick}
+            className="px-3 py-1.5 text-xs font-semibold bg-[--muted] text-[--muted-foreground] rounded-full hover:bg-[--accent] hover:text-[--accent-foreground] transition-colors"
+        >
+            {children}
+        </button>
+    );
 
     return (
         <article ref={cardRef} className="bg-[--card] border border-[--border] rounded-2xl shadow-lg flex flex-col overflow-hidden" aria-labelledby={titleId}>
@@ -162,6 +178,24 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
                     </div>
                 </div>
             </div>
+
+            {onModify && !isSavedView && !isDemo && (
+                 <div className="px-8 pb-6 pt-2 no-print">
+                    <h4 className="text-sm font-semibold text-[--muted-foreground] mb-3">Want a change?</h4>
+                    <div className="flex flex-wrap gap-2">
+                        <ModificationButton onClick={() => handleModify("make it quicker")}>
+                            Make it Quicker
+                        </ModificationButton>
+                        <ModificationButton onClick={() => handleModify("make it healthier")}>
+                            Make it Healthier
+                        </ModificationButton>
+                        <ModificationButton onClick={() => handleModify("make it vegetarian")}>
+                            Make it Vegetarian
+                        </ModificationButton>
+                    </div>
+                </div>
+            )}
+
             {!isDemo && (
                 <div className="p-4 bg-[--muted]/30 border-t border-[--border] no-print">
                     <div className="flex gap-2 items-center justify-end">

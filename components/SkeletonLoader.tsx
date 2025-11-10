@@ -4,7 +4,7 @@ const SkeletonBar: React.FC<{ width: string; height?: string }> = ({ width, heig
     <div className={`bg-[--muted] rounded ${width} ${height}`}></div>
 );
 
-const SkeletonCard: React.FC = () => (
+export const SkeletonCard: React.FC = () => (
      <div className="bg-[--card] border border-[--border] rounded-2xl shadow-lg w-full overflow-hidden">
         <div className="p-8">
             <SkeletonBar width="w-3/4" height="h-7" />

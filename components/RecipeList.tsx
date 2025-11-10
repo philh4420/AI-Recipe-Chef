@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Recipe } from '../types';
 import { RecipeCard } from './RecipeCard';
-import { SkeletonLoader } from './SkeletonLoader';
+import { SkeletonLoader, SkeletonCard } from './SkeletonLoader';
 
 interface RecipeListProps {
     recipes: Recipe[];
@@ -11,6 +11,8 @@ interface RecipeListProps {
     onSave: (recipe: Recipe) => Promise<void>;
     savedRecipeIds: string[];
     onRetry: () => void;
+    onModify: (recipe: Recipe, modification: string, index: number) => void;
+    modifyingRecipeIndex: number | null;
 }
 
 const ChefIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -25,7 +27,7 @@ const ErrorIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, error, onClear, onSave, savedRecipeIds, onRetry }) => {
+export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, error, onClear, onSave, savedRecipeIds, onRetry, onModify, modifyingRecipeIndex }) => {
     
     if (isLoading) {
         return <div className="mt-12"><SkeletonLoader /></div>;
@@ -64,11 +66,16 @@ export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, erro
                 <div className="grid grid-cols-1 gap-8">
                     {recipes.map((recipe, index) => (
                         <div key={`${recipe.recipeName}-${index}`} className="animate-stagger-fade-in" style={{ animationDelay: `${index * 100}ms`}}>
-                             <RecipeCard 
-                                recipe={recipe}
-                                onSave={onSave}
-                                isSaved={savedRecipeIds.includes(recipe.recipeName)}
-                            />
+                             {modifyingRecipeIndex === index ? (
+                                <div className="animate-pulse"><SkeletonCard /></div>
+                             ) : (
+                                <RecipeCard 
+                                    recipe={recipe}
+                                    onSave={onSave}
+                                    isSaved={savedRecipeIds.includes(recipe.recipeName)}
+                                    onModify={(recipe, modification) => onModify(recipe, modification, index)}
+                                />
+                             )}
                         </div>
                     ))}
                 </div>
