@@ -67,13 +67,12 @@ export default async function handler(
   const formData: FormData = request.body;
   const { ingredients, diet, cuisine, cookingMethod } = formData;
     
-  const prompt = `Generate a list of 3 recipes based on the following criteria.
-    - Key Ingredients: ${ingredients || 'any'}
-    - Dietary Preference: ${diet || 'any'}
-    - Cuisine Style: ${cuisine || 'any'}
-    - Cooking Method: ${cookingMethod || 'any'}
-    
-    Please create unique and delicious recipes that fit these requirements. Ensure the output is a valid JSON array of objects, where each object matches the provided schema.`;
+  // Optimized prompt: More direct and relies on the schema for formatting.
+  const prompt = `Generate 3 recipes based on the following criteria:
+    - Main Ingredients: ${ingredients || 'any'}
+    - Diet: ${diet || 'any'}
+    - Cuisine: ${cuisine || 'any'}
+    - Cooking Style: ${cookingMethod || 'any'}`;
 
   try {
     const result = await ai.models.generateContent({
@@ -94,13 +93,22 @@ export default async function handler(
     return response.status(200).json(recipeData);
 
   } catch (error: any) {
-    console.error("Error calling Gemini API:", error);
-    if (error.message && error.message.includes('API key not valid')) {
-        return response.status(401).json({ error: "The server's Gemini API key is not valid." });
+    console.error("Error in /api/generate:", error);
+        
+    let detailedError = "An error occurred while generating recipes.";
+
+    // Check for specific Gemini API error structure or fallback to generic message
+    if (error.response && error.response.data && error.response.data.error) {
+        detailedError = `Gemini API Error: ${error.response.data.error.message}`;
+    } else if (error.message) {
+        detailedError = error.message;
     }
+
     if (error instanceof SyntaxError) {
-        return response.status(500).json({ error: "Failed to parse a valid JSON response from the AI model." });
+        return response.status(500).json({ error: "Failed to parse a valid JSON response from the AI model. The model may have returned an unexpected format." });
     }
-    return response.status(500).json({ error: "An error occurred while generating recipes." });
+    
+    // Pass the more detailed error message to the client
+    return response.status(500).json({ error: detailedError });
   }
 }
