@@ -21,11 +21,6 @@ const FilterControls: React.FC<{
     setCuisineFilter: (cuisine: string) => void;
 }> = ({ recipes, sortOrder, setSortOrder, cuisineFilter, setCuisineFilter }) => {
     
-    const uniqueCuisines = useMemo(() => {
-        const cuisines = new Set(recipes.map(r => r.description.split(' ').find(word => CUISINE_OPTIONS.includes(word)) || 'Other'));
-        return ['All Cuisines', ...Array.from(cuisines)];
-    }, [recipes]);
-    
     // A simplified list for the filter since extracting from description isn't perfect
     const CUISINE_OPTIONS = ["All Cuisines", "Italian", "Mexican", "Chinese", "Indian", "French", "Japanese", "American", "Thai", "Spanish", "Greek"];
 
@@ -63,6 +58,7 @@ export const SavedRecipes: React.FC<SavedRecipesProps> = ({ recipes, onDelete })
     const filteredAndSortedRecipes = useMemo(() => {
         const parseTime = (timeStr: string): number => {
             const time = parseInt(timeStr.split(' ')[0], 10);
+            if (isNaN(time)) return Infinity; // Handle cases where parsing fails
             if (timeStr.includes('hr')) return time * 60;
             return time; // assume minutes
         };
@@ -115,8 +111,8 @@ export const SavedRecipes: React.FC<SavedRecipesProps> = ({ recipes, onDelete })
 
             {filteredAndSortedRecipes.length > 0 ? (
                 <div className="grid grid-cols-1 gap-8">
-                    {filteredAndSortedRecipes.map((recipe) => (
-                        <div key={recipe.id} className="animate-stagger-fade-in" style={{ animationDelay: `${filteredAndSortedRecipes.indexOf(recipe) * 100}ms`}}>
+                    {filteredAndSortedRecipes.map((recipe, index) => (
+                        <div key={recipe.id} className="animate-stagger-fade-in" style={{ animationDelay: `${index * 100}ms`}}>
                             <RecipeCard 
                                 recipe={recipe} 
                                 onDelete={onDelete}
