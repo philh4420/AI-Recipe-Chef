@@ -2,20 +2,20 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import type { Toast as ToastType } from '../types';
 
 // --- ICONS ---
-const CheckCircleIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const CheckCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
 );
 
-const XCircleIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const XCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
 );
 
-const XIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const XIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
 );
@@ -42,13 +42,13 @@ const Toast: React.FC<{ toast: ToastType; onClose: () => void }> = ({ toast, onC
   return (
     <div className={`${baseClasses} ${typeClasses}`} role="alert">
       <div className="flex-shrink-0">
-        <Icon className="h-6 w-6" />
+        <Icon className="h-6 w-6" aria-hidden="true" />
       </div>
       <div className="flex-1">
         <p className="text-sm font-medium text-[--foreground]">{message}</p>
       </div>
-      <button onClick={onClose} className="text-[--muted-foreground] hover:text-[--foreground] transition-colors">
-        <XIcon className="h-5 w-5" />
+      <button onClick={onClose} className="text-[--muted-foreground] hover:text-[--foreground] transition-colors" aria-label="Close notification">
+        <XIcon className="h-5 w-5" aria-hidden="true" />
       </button>
     </div>
   );

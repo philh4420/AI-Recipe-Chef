@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onSignOut, isDarkMode, tog
                         <h1 className="text-xl font-bold text-[--foreground]">
                             Recipe<span className="text-[--primary]">Genius</span>
                         </h1>
-                        <nav className="hidden md:flex items-center gap-2 bg-[--card] border border-[--border] p-1 rounded-lg">
+                        <nav aria-label="Main navigation" className="hidden md:flex items-center gap-2 bg-[--card] border border-[--border] p-1 rounded-lg">
                             <button onClick={() => setView('generator')} className={navButtonClasses('generator')}>
                                 Generator
                             </button>
@@ -65,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onSignOut, isDarkMode, tog
                         </button>
                     </div>
                 </div>
-                 <nav className="md:hidden flex items-center justify-center gap-2 bg-[--card] border border-[--border] p-1 rounded-lg mb-4">
+                 <nav aria-label="Main navigation" className="md:hidden flex items-center justify-center gap-2 bg-[--card] border border-[--border] p-1 rounded-lg mb-4">
                     <button onClick={() => setView('generator')} className={`${navButtonClasses('generator')} flex-1`}>
                         Generator
                     </button>

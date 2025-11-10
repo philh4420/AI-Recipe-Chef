@@ -14,6 +14,12 @@ const EyeOffIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
+const CloseIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
 interface AuthModalProps {
     initialView: 'login' | 'signup';
     onClose: () => void;
@@ -63,12 +69,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onSi
         <div 
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in"
             onClick={onClose}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-title"
         >
             <div 
-                className="bg-[--card] rounded-2xl shadow-xl w-full max-w-md p-8 m-4"
+                className="relative bg-[--card] rounded-2xl shadow-xl w-full max-w-md p-8 m-4"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h2 className="text-2xl font-bold text-center text-[--card-foreground] mb-2">{isLogin ? 'Welcome Back!' : 'Create an Account'}</h2>
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 p-1 rounded-full text-[--muted-foreground] hover:text-[--foreground] hover:bg-[--muted] transition-colors"
+                    aria-label="Close authentication modal"
+                >
+                    <CloseIcon className="h-6 w-6" />
+                </button>
+
+                <h2 id="auth-modal-title" className="text-2xl font-bold text-center text-[--card-foreground] mb-2">{isLogin ? 'Welcome Back!' : 'Create an Account'}</h2>
                 <p className="text-center text-[--muted-foreground] mb-6">{isLogin ? 'Sign in to access your recipes.' : 'Let\'s get you started.'}</p>
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,7 +103,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onSi
                         <label className="text-sm font-medium text-[--card-foreground]" htmlFor="password">Password</label>
                         <div className="relative">
                             <input type={showPassword ? 'text' : 'password'} name="password" id="password" value={formData.password} onChange={handleChange} required className="mt-1 block w-full border border-[--border] bg-[--input] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[--ring] focus:border-[--primary] sm:text-sm text-[--foreground]" />
-                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-[--muted-foreground]">
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-[--muted-foreground]" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                                 {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                             </button>
                         </div>
@@ -98,7 +115,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onSi
                         </div>
                     )}
 
-                    {error && <p className="text-sm text-[--destructive] text-center">{error}</p>}
+                    {error && <p role="alert" className="text-sm text-[--destructive] text-center">{error}</p>}
 
                     <button type="submit" disabled={isLoading} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-[--primary-foreground] bg-[--primary] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] disabled:bg-[--muted] disabled:text-[--muted-foreground] disabled:cursor-not-allowed transition-all duration-200">
                          {isLoading ? (

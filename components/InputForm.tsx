@@ -7,7 +7,7 @@ const COOKING_METHOD_OPTIONS = ["Any", "Air-Fry", "Bake", "Barbecue", "Blanch", 
 
 const InputField: React.FC<{ icon: React.ReactNode; children: React.ReactNode }> = ({ icon, children }) => (
     <div className="relative">
-        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3" aria-hidden="true">
             {icon}
         </div>
         {children}
