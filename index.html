@@ -115,15 +115,12 @@
       }
       
       .faq-answer {
-        display: grid;
-        grid-template-rows: 0fr;
-        transition: grid-template-rows 0.3s ease-out;
-      }
-      .faq-answer > div {
+        max-height: 0;
         overflow: hidden;
+        transition: max-height 0.3s ease-in-out;
       }
       .faq-answer.open {
-        grid-template-rows: 1fr;
+        max-height: 20rem; /* Generous max height for content */
       }
 
       /* Mobile menu styles */

@@ -119,7 +119,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle }) 
                     <svg className={`h-6 w-6 transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 <div className={`faq-answer ${isOpen ? 'open' : ''}`}>
-                    <div className="pb-4 text-[--muted-foreground]">{children}</div>
+                    <div className="pt-2 pb-4 text-[--muted-foreground]">{children}</div>
                 </div>
             </div>
         );
@@ -171,7 +171,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle }) 
                             </div>
                         </AnimatedDiv>
                         {showDemo && (
-                            <div className="mt-12 max-w-4xl mx-auto">
+                            <div className="mt-12 max-w-4xl mx-auto animate-fade-in">
+                                <div className="flex justify-end mb-2">
+                                    <button 
+                                        onClick={() => setShowDemo(false)}
+                                        className="flex items-center gap-1 text-sm text-[--muted-foreground] hover:text-[--foreground] transition-colors"
+                                        aria-label="Close example recipe"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                        Close Example
+                                    </button>
+                                </div>
                                 <RecipeCard recipe={demoRecipe} isDemo={true} />
                             </div>
                         )}
