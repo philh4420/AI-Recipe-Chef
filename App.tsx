@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { generateRecipes } from './services/geminiService';
 import { addRecipe, deleteRecipe, getRecipes } from './services/firestoreService';
@@ -20,6 +18,7 @@ const App: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<React.ReactNode | null>(null);
     const [view, setView] = useState<'generator' | 'saved'>('generator');
+    const [lastFormData, setLastFormData] = useState<FormData | null>(null);
     const { addToast } = useToast();
 
     const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -59,6 +58,7 @@ const App: React.FC = () => {
     const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
     const handleSubmit = async (formData: FormData) => {
+        setLastFormData(formData);
         setIsLoading(true);
         setError(null);
         setGeneratedRecipes([]);
@@ -87,6 +87,12 @@ const App: React.FC = () => {
             setError(errorMessage);
         } finally {
             setIsLoading(false);
+        }
+    };
+    
+    const handleRetry = () => {
+        if(lastFormData) {
+            handleSubmit(lastFormData);
         }
     };
     
@@ -135,7 +141,7 @@ const App: React.FC = () => {
     }
     
     if (!user) {
-        return <LandingPage onSignIn={signInWithGoogle} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />;
+        return <LandingPage onSignInWithGoogle={signInWithGoogle} />;
     }
     
     return (
@@ -159,6 +165,7 @@ const App: React.FC = () => {
                                 error={error} 
                                 onClear={handleClear}
                                 onSave={handleSaveRecipe}
+                                onRetry={handleRetry}
                                 savedRecipeIds={savedRecipes.map(r => r.recipeName)}
                             />
                         </>

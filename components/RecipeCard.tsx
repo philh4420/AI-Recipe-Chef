@@ -1,5 +1,6 @@
 import React, { useState, useRef, useId } from 'react';
 import type { Recipe } from '../types';
+import { useToast } from '../hooks/useToast';
 
 const ClockIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
@@ -31,10 +32,19 @@ const CheckIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+const CopyIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+);
 
-const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+
+const Section: React.FC<{ title: string; children: React.ReactNode; extra?: React.ReactNode }> = ({ title, children, extra }) => (
     <div>
-        <h3 className="text-lg font-semibold text-[--foreground] mb-3">{title}</h3>
+        <div className="flex justify-between items-center mb-3">
+             <h3 className="text-lg font-semibold text-[--foreground]">{title}</h3>
+             {extra}
+        </div>
         {children}
     </div>
 );
@@ -53,6 +63,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
     const [justSaved, setJustSaved] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     const titleId = useId();
+    const { addToast } = useToast();
     
     const handleSave = async () => {
         if (onSave) {
@@ -86,8 +97,20 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
         window.print();
     };
 
+    const handleCopyIngredients = () => {
+        const ingredientsText = recipe.ingredients.join('\n');
+        navigator.clipboard.writeText(ingredientsText)
+            .then(() => {
+                addToast({ message: 'Ingredients copied to clipboard!', type: 'success' });
+            })
+            .catch(err => {
+                console.error('Failed to copy ingredients: ', err);
+                addToast({ message: 'Failed to copy ingredients.', type: 'error' });
+            });
+    };
+
     return (
-        <article ref={cardRef} className="bg-[--card] border border-[--border] rounded-2xl shadow-lg animate-fade-in flex flex-col overflow-hidden" aria-labelledby={titleId}>
+        <article ref={cardRef} className="bg-[--card] border border-[--border] rounded-2xl shadow-lg flex flex-col overflow-hidden" aria-labelledby={titleId}>
             <div className='p-8 flex-grow'>
                 <h2 id={titleId} className="text-2xl font-bold text-[--foreground] mb-2">{recipe.recipeName}</h2>
                 <p className="text-[--muted-foreground] mb-6">{recipe.description}</p>
@@ -111,7 +134,14 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     <div className="lg:col-span-4">
-                        <Section title="Ingredients">
+                        <Section 
+                            title="Ingredients"
+                            extra={
+                                <button onClick={handleCopyIngredients} className="text-[--muted-foreground] hover:text-[--primary] transition-colors no-print" aria-label="Copy ingredients">
+                                    <CopyIcon className="h-5 w-5" />
+                                </button>
+                            }
+                        >
                             <ul className="space-y-2 list-disc list-inside text-[--foreground]">
                                 {recipe.ingredients.map((ingredient, index) => (
                                     <li key={index}>{ingredient}</li>

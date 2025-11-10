@@ -10,6 +10,7 @@ interface RecipeListProps {
     onClear: () => void;
     onSave: (recipe: Recipe) => Promise<void>;
     savedRecipeIds: string[];
+    onRetry: () => void;
 }
 
 const ChefIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -24,7 +25,7 @@ const ErrorIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, error, onClear, onSave, savedRecipeIds }) => {
+export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, error, onClear, onSave, savedRecipeIds, onRetry }) => {
     
     if (isLoading) {
         return <div className="mt-12"><SkeletonLoader /></div>;
@@ -36,6 +37,12 @@ export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, erro
                 <ErrorIcon aria-hidden="true" className="mx-auto h-16 w-16 text-[--destructive]" />
                 <h3 className="mt-4 text-xl font-semibold text-[--foreground]">Oops, something went wrong!</h3>
                 <p className="mt-2 text-[--muted-foreground] max-w-md mx-auto">{error}</p>
+                <button
+                    onClick={onRetry}
+                    className="mt-6 py-2 px-5 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-[--primary-foreground] bg-[--primary] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] transition-colors"
+                >
+                    Try Again
+                </button>
             </div>
         );
     }
@@ -56,12 +63,13 @@ export const RecipeList: React.FC<RecipeListProps> = ({ recipes, isLoading, erro
                 </div>
                 <div className="grid grid-cols-1 gap-8">
                     {recipes.map((recipe, index) => (
-                        <RecipeCard 
-                            key={`${recipe.recipeName}-${index}`} 
-                            recipe={recipe}
-                            onSave={onSave}
-                            isSaved={savedRecipeIds.includes(recipe.recipeName)}
-                        />
+                        <div key={`${recipe.recipeName}-${index}`} className="animate-stagger-fade-in" style={{ animationDelay: `${index * 100}ms`}}>
+                             <RecipeCard 
+                                recipe={recipe}
+                                onSave={onSave}
+                                isSaved={savedRecipeIds.includes(recipe.recipeName)}
+                            />
+                        </div>
                     ))}
                 </div>
             </div>
