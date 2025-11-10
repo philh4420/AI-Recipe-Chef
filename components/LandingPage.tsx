@@ -1,12 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AuthModal } from './AuthModal';
 import { RecipeCard } from './RecipeCard';
+import { Footer } from './Footer';
 import { signInWithEmailPassword, signUpWithEmailPassword } from '../services/authService';
 import type { AuthCredentials, Recipe } from '../types';
 
 interface LandingPageProps {
     onSignInWithGoogle: () => Promise<void>;
+    isDarkMode: boolean;
+    toggleDarkMode: () => void;
 }
+
+const SunIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+);
+
+const MoonIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+    </svg>
+);
+
+const LogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <path d="M16.36,14.22c-0.28-0.45-0.58-1.1-0.6-1.55c1.42-0.2,2.44-1.34,2.44-2.67c0-1.49-1.21-2.7-2.7-2.7c-0.23,0-0.46,0.03-0.68,0.08C14.38,5.43,12.79,4.2,10.8,4.2c-2.3,0-4.21,1.65-4.57,3.83c-0.2-0.04-0.41-0.06-0.63-0.06c-1.49,0-2.7,1.21-2.7,2.7c0,1.33,1.02,2.47,2.44,2.67c-0.02,0.45-0.32,1.1-0.6,1.55C5.07,14.77,4,16.27,4,18c0,2.21,1.79,4,4,4h8c2.21,0,4-1.79,4-4C20,16.27,18.93,14.77,16.36,14.22z M12,19.5c-0.83,0-1.5-0.67-1.5-1.5s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S12.83,19.5,12,19.5z" fill="currentColor"/>
+    </svg>
+);
 
 const UserIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
@@ -85,7 +106,7 @@ const AnimatedDiv: React.FC<{ children: React.ReactNode; className?: string }> =
     );
 };
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle, isDarkMode, toggleDarkMode }) => {
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authModalView, setAuthModalView] = useState<'login' | 'signup'>('signup');
     const [showDemo, setShowDemo] = useState(false);
@@ -131,9 +152,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle }) 
                 <div className="container mx-auto px-4">
                     <div className="flex justify-between items-center h-20">
                         <div className="flex items-center gap-2">
-                           <span className="text-2xl font-bold text-[--foreground]">RecipeGenius</span>
+                           <LogoIcon className="h-7 w-7 text-[--primary]" />
+                           <span className="text-2xl font-bold text-[--foreground]">AI Recipe Chef</span>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 sm:gap-4">
+                             <button
+                                onClick={toggleDarkMode}
+                                className="p-2 rounded-full text-[--muted-foreground] hover:bg-[--muted] hover:text-[--foreground] transition-colors"
+                                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+                            >
+                                {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+                            </button>
                             <span className="hidden sm:inline text-sm text-[--muted-foreground]">Have an account?</span>
                             <button onClick={() => openAuthModal('login')} className="flex items-center gap-2 text-sm font-semibold text-[--foreground] hover:text-[--primary] transition-colors">
                                 Sign In
@@ -284,17 +313,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle }) 
                     <AnimatedDiv>
                         <SectionTitle>Frequently Asked Questions</SectionTitle>
                         <div className="max-w-2xl mx-auto">
-                           <FaqItem question="Is RecipeGenius free to use?">Yes! Our core features—generating recipes and saving them to your personal cookbook—are completely free. We may introduce premium features in the future.</FaqItem>
+                           <FaqItem question="Is AI Recipe Chef free to use?">Yes! Our core features—generating recipes and saving them to your personal cookbook—are completely free. We may introduce premium features in the future.</FaqItem>
                            <FaqItem question="Where do the recipes come from?">Our recipes are generated by a powerful AI trained on a vast database of culinary knowledge. It creates unique recipes on the fly based on your inputs.</FaqItem>
+                           <FaqItem question="What if I don't like a recipe?">No problem! Every generated recipe comes with modification options like 'Make it Quicker' or 'Make it Healthier'. You can refine the suggestions until they're perfect for you.</FaqItem>
                            <FaqItem question="Can I use it for very specific ingredients?">Absolutely. The more specific you are (e.g., "chicken thighs, canned tomatoes, capers"), the more tailored your recipe results will be.</FaqItem>
                            <FaqItem question="How many recipes can I save?">You can save as many recipes as you like to your personal cookbook. They'll be waiting for you whenever you sign in.</FaqItem>
+                           <FaqItem question="Can I print my recipes?">Yes, every recipe card has a print button. This formats the recipe in a clean, easy-to-read layout, perfect for taking to the kitchen.</FaqItem>
                         </div>
                     </AnimatedDiv>
                 </Section>
 
-                <Section>
-                    <AnimatedDiv className="text-center max-w-2xl mx-auto">
-                        <h2 className="text-3xl font-bold mb-4">Ready to Start Cooking?</h2>
+                <Section className="bg-[--muted]/30">
+                    <AnimatedDiv className="flex flex-col items-center text-center max-w-2xl mx-auto">
+                        <h2 className="text-4xl font-semibold mb-4 text-[--foreground]">Ready to Start Cooking?</h2>
                         <p className="text-[--muted-foreground] mb-8">Your next culinary adventure is just a click away. Sign up for free and unlock a world of delicious possibilities.</p>
                         <button
                             onClick={() => openAuthModal('signup')}
@@ -306,6 +337,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle }) 
                 </Section>
             </main>
             
+            <Footer />
+
             {isAuthModalOpen && (
                 <AuthModal
                     initialView={authModalView}

@@ -8,6 +8,7 @@ import { Header } from './components/Header';
 import { RecipeList } from './components/RecipeList';
 import { SavedRecipes } from './components/SavedRecipes';
 import { LandingPage } from './components/LandingPage';
+import { Footer } from './components/Footer';
 import { useToast } from './hooks/useToast';
 
 const App: React.FC = () => {
@@ -190,11 +191,15 @@ const App: React.FC = () => {
     }
 
     if (!user) {
-        return <LandingPage onSignInWithGoogle={handleGoogleSignIn} />;
+        return <LandingPage 
+            onSignInWithGoogle={handleGoogleSignIn} 
+            isDarkMode={isDarkMode} 
+            toggleDarkMode={toggleDarkMode}
+        />;
     }
 
     return (
-        <div className="min-h-screen bg-[--background] text-[--foreground] font-sans">
+        <div className="min-h-screen bg-[--background] text-[--foreground] font-sans flex flex-col">
             <Header
                 user={user}
                 onSignOut={handleSignOut}
@@ -203,7 +208,7 @@ const App: React.FC = () => {
                 view={view}
                 setView={setView}
             />
-            <main className="container mx-auto p-4 md:p-8">
+            <main className="container mx-auto p-4 md:p-8 flex-grow">
                  {view === 'generator' ? (
                     <>
                         <InputForm isLoading={isLoading || modifyingRecipeIndex !== null} onSubmit={handleSubmit} onSurprise={handleSubmit} />
@@ -226,6 +231,7 @@ const App: React.FC = () => {
                     />
                 )}
             </main>
+            <Footer />
         </div>
     );
 };
