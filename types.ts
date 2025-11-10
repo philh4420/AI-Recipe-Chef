@@ -1,3 +1,5 @@
+import type { User } from 'firebase/auth';
+
 export interface Recipe {
   id?: string;
   recipeName: string;
@@ -18,4 +20,12 @@ export interface FormData {
     diet: string;
     cuisine: string;
     cookingMethod: string;
+}
+
+export type FirebaseUser = User;
+
+export interface AuthCredentials {
+    displayName?: string;
+    email: string;
+    password?: string;
 }

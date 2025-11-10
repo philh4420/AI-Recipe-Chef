@@ -1,4 +1,5 @@
 import React from 'react';
+import type { FirebaseUser } from '../types';
 
 const SunIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -13,13 +14,15 @@ const MoonIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 interface HeaderProps {
+    user: FirebaseUser;
+    onSignOut: () => void;
     isDarkMode: boolean;
     toggleDarkMode: () => void;
     view: 'generator' | 'saved';
     setView: (view: 'generator' | 'saved') => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, view, setView }) => {
+export const Header: React.FC<HeaderProps> = ({ user, onSignOut, isDarkMode, toggleDarkMode, view, setView }) => {
     
     const navButtonClasses = (buttonView: 'generator' | 'saved') => 
         `px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -30,15 +33,20 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, view
 
     return (
         <header className="text-center mb-12 relative">
-            <button
-                onClick={toggleDarkMode}
-                className="absolute top-0 right-0 p-2 rounded-full bg-[--card] text-[--foreground] hover:bg-[--muted] focus:outline-none focus:ring-2 focus:ring-[--ring] transition-colors"
-                aria-label="Toggle dark mode"
-            >
-                {isDarkMode ? <SunIcon className="h-6 w-6" /> : <MoonIcon className="h-6 w-6" />}
-            </button>
+             <div className="absolute top-0 right-0 flex items-center gap-4">
+                <span className="text-sm text-[--muted-foreground] hidden sm:block">Welcome, {user.displayName?.split(' ')[0]}</span>
+                <button onClick={onSignOut} className="text-sm font-medium text-[--muted-foreground] hover:text-[--primary]">Sign Out</button>
+                <button
+                    onClick={toggleDarkMode}
+                    className="p-2 rounded-full bg-[--card] text-[--foreground] hover:bg-[--muted] focus:outline-none focus:ring-2 focus:ring-[--ring] transition-colors"
+                    aria-label="Toggle dark mode"
+                >
+                    {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+                </button>
+            </div>
 
-             <h1 className="text-4xl md:text-5xl font-extrabold text-[--foreground] tracking-tight">
+
+             <h1 className="text-4xl md:text-5xl font-extrabold text-[--foreground] tracking-tight pt-12 md:pt-0">
                 AI Recipe <span className="text-[--primary]">Generator</span>
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-[--muted-foreground]">

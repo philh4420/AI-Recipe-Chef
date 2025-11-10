@@ -2,13 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { generateRecipes } from './services/geminiService';
 import { addRecipe, deleteRecipe, getRecipes } from './services/firestoreService';
-import type { Recipe, FormData } from './types';
+import { onAuthStateChange, signInWithGoogle, signOutUser } from './services/authService';
+import type { Recipe, FormData, FirebaseUser } from './types';
 import { InputForm } from './components/InputForm';
 import { Header } from './components/Header';
 import { RecipeList } from './components/RecipeList';
 import { SavedRecipes } from './components/SavedRecipes';
+import { LandingPage } from './components/LandingPage';
 
 const App: React.FC = () => {
+    const [user, setUser] = useState<FirebaseUser | null>(null);
+    const [authLoading, setAuthLoading] = useState<boolean>(true);
     const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -30,12 +34,24 @@ const App: React.FC = () => {
     }, [isDarkMode]);
     
     useEffect(() => {
+        const unsubscribe = onAuthStateChange((user) => {
+            setUser(user);
+            setAuthLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+    
+    useEffect(() => {
         const fetchSavedRecipes = async () => {
-            const recipesFromDb = await getRecipes();
-            setSavedRecipes(recipesFromDb);
+            if (user) {
+                const recipesFromDb = await getRecipes(user.uid);
+                setSavedRecipes(recipesFromDb);
+            } else {
+                setSavedRecipes([]); // Clear saved recipes on logout
+            }
         };
         fetchSavedRecipes();
-    }, []);
+    }, [user]);
 
     const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
@@ -50,23 +66,18 @@ const App: React.FC = () => {
             let errorMessage = 'An unexpected error occurred.';
             if (err.message) {
                 try {
-                    // The error from the backend is often a stringified JSON object from the Gemini API.
                     const errorData = JSON.parse(err.message);
                     const apiError = errorData.error;
-
                     if (apiError && apiError.message) {
                         if (apiError.code === 503 || apiError.status === 'UNAVAILABLE') {
                             errorMessage = "The AI model is currently overloaded with requests. This is a temporary issue. Please wait a moment and try again.";
                         } else {
-                            // Display other specific API errors
                             errorMessage = `API Error: ${apiError.message}`;
                         }
                     } else {
-                        // It's a JSON but not in the expected format.
                         errorMessage = err.message;
                     }
                 } catch (e) {
-                    // It's not a JSON string, so just use the raw message.
                     errorMessage = err.message;
                 }
             }
@@ -86,28 +97,43 @@ const App: React.FC = () => {
     };
 
     const handleSaveRecipe = async (recipe: Recipe) => {
+        if (!user) return;
         try {
-            const newId = await addRecipe(recipe);
+            const newId = await addRecipe(user.uid, recipe);
             setSavedRecipes(prev => [...prev, { ...recipe, id: newId }]);
         } catch (error) {
             console.error("Error saving recipe:", error);
-            // Optionally set an error state to show in the UI
         }
     };
 
     const handleDeleteRecipe = async (id: string) => {
+        if (!user) return;
         try {
-            await deleteRecipe(id);
+            await deleteRecipe(user.uid, id);
             setSavedRecipes(prev => prev.filter(r => r.id !== id));
         } catch (error) {
             console.error("Error deleting recipe: ", error);
         }
     };
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-[--primary]"></div>
+            </div>
+        );
+    }
+    
+    if (!user) {
+        return <LandingPage onSignIn={signInWithGoogle} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />;
+    }
     
     return (
         <div className="min-h-screen font-sans">
             <main className="container mx-auto px-4 py-8 md:py-12">
                 <Header 
+                    user={user}
+                    onSignOut={signOutUser}
                     isDarkMode={isDarkMode} 
                     toggleDarkMode={toggleDarkMode}
                     view={view}
@@ -124,7 +150,7 @@ const App: React.FC = () => {
                                 error={error} 
                                 onClear={handleClear}
                                 onSave={handleSaveRecipe}
-                                savedRecipeIds={savedRecipes.map(r => r.recipeName)} // Use name for simple matching
+                                savedRecipeIds={savedRecipes.map(r => r.recipeName)}
                             />
                         </>
                     ) : (
