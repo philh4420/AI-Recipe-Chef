@@ -65,29 +65,86 @@
       }
 
       @media print {
+        /* Hide everything by default */
         body > * {
-            visibility: hidden;
+          visibility: hidden;
         }
+
+        /* Show only the printing container and its children */
         .printing-container, .printing-container * {
-            visibility: visible;
+          visibility: visible;
         }
+
+        /* General print setup for the container */
         .printing-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            margin: 0;
-            padding: 1rem;
-            box-shadow: none !important;
-            background: none !important;
-            border: none !important;
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          margin: 0;
+          padding: 2rem;
+          box-shadow: none !important;
+          background: none !important;
+          border: none !important;
+          font-size: 12pt;
+          font-family: Georgia, 'Times New Roman', Times, serif;
         }
-        .printing-container .no-print {
-            display: none !important;
-        }
+
+        /* Ensure all text is black for print */
         .printing-container * {
-            color: #000 !important;
-            background: none !important;
+          color: #000 !important;
+          background: none !important;
+        }
+
+        /* Hide elements specifically marked as no-print (like buttons) */
+        .printing-container .no-print {
+          display: none !important;
+        }
+
+        /* Style headings for clarity */
+        .printing-container h2 {
+          font-size: 24pt;
+          font-weight: bold;
+          margin-bottom: 0.5rem;
+          page-break-after: avoid;
+        }
+
+        .printing-container h3 {
+          font-size: 16pt;
+          font-weight: bold;
+          margin-top: 1.5rem;
+          margin-bottom: 0.5rem;
+          border-bottom: 1px solid #ccc;
+          padding-bottom: 0.25rem;
+          page-break-after: avoid;
+        }
+
+        /* Style paragraphs and lists for readability */
+        .printing-container p, 
+        .printing-container li {
+          line-height: 1.5;
+        }
+        
+        .printing-container ul, 
+        .printing-container ol {
+          margin-bottom: 1rem;
+        }
+
+        /* Prevent lists from breaking across pages if possible */
+        .printing-container ul, 
+        .printing-container ol,
+        .printing-container li {
+          page-break-inside: avoid;
+        }
+
+        /* Hide decorative elements like dividers */
+        .printing-container hr {
+          display: none;
+        }
+
+        /* Ensure the grid layout for ingredients/instructions becomes a single column for print */
+        .printing-container .grid {
+          display: block !important;
         }
       }
     </style>
