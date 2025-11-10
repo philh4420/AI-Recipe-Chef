@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import type { InputFormProps, FormData } from '../types';
 
-const DIETARY_OPTIONS = ["Any", "Vegetarian", "Vegan", "Gluten-Free", "Keto", "Paleo"];
-const CUISINE_OPTIONS = ["Any", "Italian", "Mexican", "Chinese", "Indian", "Japanese", "Mediterranean", "Thai"];
-const COOKING_METHOD_OPTIONS = ["Any", "Bake", "Fry", "Roast", "Grill", "Steam", "Slow-Cook"];
+const DIETARY_OPTIONS = ["Any", "Atkins", "Dairy-Free", "DASH", "Diabetic", "Egg-Free", "Gluten-Free", "Halal", "Keto", "Kosher", "Low-Carb", "Low-Fat", "Low-FODMAP", "Low-Salt", "Nut-Free", "Paleo", "Pescatarian", "Raw Food", "Shellfish-Free", "Soy-Free", "Sugar-Free", "Vegan", "Vegetarian", "Whole30"];
+const CUISINE_OPTIONS = ["Any", "African", "American", "Argentinian", "Brazilian", "British", "Cajun & Creole", "Caribbean", "Chinese", "Cuban", "Eastern European", "Ethiopian", "Filipino", "French", "German", "Greek", "Indian", "Irish", "Italian", "Japanese", "Jewish", "Korean", "Latin American", "Lebanese", "Malaysian", "Mediterranean", "Mexican", "Middle Eastern", "Moroccan", "Nordic", "Pakistani", "Peruvian", "Polish", "Portuguese", "Russian", "Southern (US)", "Spanish", "Thai", "Turkish", "Vietnamese"];
+const COOKING_METHOD_OPTIONS = ["Any", "Air-Fry", "Bake", "Barbecue", "Blanch", "Boil", "Braise", "Broil", "Cure", "Deep-Fry", "Dehydrate", "Ferment", "Flambé", "Fry", "Grill", "Marinate", "Microwave", "Pan-Fry", "Pickle", "Poach", "Pressure-Cook", "Roast", "Sauté", "Sear", "Simmer", "Slow-Cook", "Smoke", "Sous-Vide", "Steam", "Stew", "Stir-Fry"];
+
 
 const InputField: React.FC<{ label: string; id: string; children: React.ReactNode }> = ({ label, id, children }) => (
     <div>
