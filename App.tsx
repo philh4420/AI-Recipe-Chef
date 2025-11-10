@@ -46,15 +46,18 @@ const App: React.FC = () => {
             const result = await generateRecipes(formData);
             setGeneratedRecipes(result);
         } catch (err: any) {
-            if (err.message === 'API_KEY environment variable not set') {
+            if (err.message === 'VERCEL_PUBLIC_API_KEY environment variable not set') {
                 setError(
                     <>
-                        The Gemini API key is not configured. Since you're deploying on Vercel, you need to add it to your project's Environment Variables. 
-                        Please follow <a href="https://vercel.com/docs/projects/environment-variables" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-[--destructive]">Vercel's official guide</a> to set up your <code>API_KEY</code> correctly.
+                        The Gemini API key is not configured for your Vercel deployment. For security, Vercel requires environment variables used in the browser to be prefixed.
+                        <br/><br/>
+                        Please go to your <strong>Vercel Project Settings &rarr; Environment Variables</strong> and ensure you have a variable named <code>VERCEL_PUBLIC_API_KEY</code> with your Gemini API key as the value.
+                        <br/><br/>
+                        You can find more information in <a href="https://vercel.com/docs/projects/environment-variables/managing-environment-variables#system-environment-variables" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-[--destructive]">Vercel's documentation</a>.
                     </>
                 );
             } else if (err.message === 'API key not valid') {
-                setError("Your API key is not valid. Please check it in your Vercel Environment Variables and try again.");
+                setError("Your API key is not valid. Please check the value of VERCEL_PUBLIC_API_KEY in your Vercel Environment Variables and try again.");
             } else {
                 setError(err.message || 'An unexpected error occurred.');
             }

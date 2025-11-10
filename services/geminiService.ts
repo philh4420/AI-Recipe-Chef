@@ -42,10 +42,11 @@ const recipeSchema = {
 
 
 export const generateRecipes = async (formData: FormData): Promise<Recipe[]> => {
-    const API_KEY = process.env.API_KEY;
+    // Vercel requires environment variables exposed to the browser to be prefixed with VERCEL_PUBLIC_.
+    const API_KEY = process.env.VERCEL_PUBLIC_API_KEY;
 
     if (!API_KEY) {
-      throw new Error("API_KEY environment variable not set");
+      throw new Error("VERCEL_PUBLIC_API_KEY environment variable not set");
     }
     const ai = new GoogleGenAI({ apiKey: API_KEY });
     
