@@ -48,9 +48,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
     
     const handleDelete = async () => {
         if (onDelete && recipe.id) {
-            if (confirm(`Are you sure you want to delete "${recipe.recipeName}"?`)) {
-                await onDelete(recipe.id);
-            }
+            await onDelete(recipe.id);
         }
     };
 

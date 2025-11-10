@@ -9,6 +9,7 @@ import { Header } from './components/Header';
 import { RecipeList } from './components/RecipeList';
 import { SavedRecipes } from './components/SavedRecipes';
 import { LandingPage } from './components/LandingPage';
+import { useToast } from './hooks/useToast';
 
 const App: React.FC = () => {
     const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -18,6 +19,7 @@ const App: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<React.ReactNode | null>(null);
     const [view, setView] = useState<'generator' | 'saved'>('generator');
+    const { addToast } = useToast();
 
     const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
         if (typeof window !== 'undefined' && window.localStorage) {
@@ -101,8 +103,10 @@ const App: React.FC = () => {
         try {
             const newId = await addRecipe(user.uid, recipe);
             setSavedRecipes(prev => [...prev, { ...recipe, id: newId }]);
+            addToast({ message: `"${recipe.recipeName}" has been saved!`, type: 'success' });
         } catch (error) {
             console.error("Error saving recipe:", error);
+            addToast({ message: 'Failed to save recipe. Please try again.', type: 'error' });
         }
     };
 
@@ -111,8 +115,10 @@ const App: React.FC = () => {
         try {
             await deleteRecipe(user.uid, id);
             setSavedRecipes(prev => prev.filter(r => r.id !== id));
+            addToast({ message: 'Recipe deleted successfully.', type: 'success' });
         } catch (error) {
             console.error("Error deleting recipe: ", error);
+            addToast({ message: 'Failed to delete recipe. Please try again.', type: 'error' });
         }
     };
 
