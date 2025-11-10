@@ -25,6 +25,13 @@ const PrintIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
+const CheckIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+);
+
+
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div>
         <h3 className="text-lg font-semibold text-[--foreground] mb-3">{title}</h3>
@@ -42,6 +49,7 @@ interface RecipeCardProps {
 
 export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete, isSaved, isSavedView }) => {
     const [isSaving, setIsSaving] = useState(false);
+    const [justSaved, setJustSaved] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
     
     const handleSave = async () => {
@@ -49,6 +57,10 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
             setIsSaving(true);
             await onSave(recipe);
             setIsSaving(false);
+            setJustSaved(true);
+            setTimeout(() => {
+                setJustSaved(false);
+            }, 1500);
         }
     };
     
@@ -143,6 +155,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
                                     </svg>
                                     <span>Saving...</span>
                                </>
+                            ) : justSaved ? (
+                                <>
+                                    <CheckIcon className="h-4 w-4 text-[--primary] animate-pop-in" />
+                                    <span>Saved!</span>
+                                </>
                             ) : isSaved ? (
                                 <>
                                    <HeartIcon className="h-4 w-4 text-[--primary]" />
