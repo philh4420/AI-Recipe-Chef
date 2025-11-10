@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AuthModal } from './AuthModal';
 import { signInWithEmailPassword, signUpWithEmailPassword } from '../services/authService';
+import { RecipeCard } from './RecipeCard';
+import type { Recipe } from '../types';
 
+// --- ICONS ---
 const SunIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -20,16 +23,45 @@ const GoogleIcon: React.FC = () => (
     </svg>
 );
 
-const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string; }> = ({ icon, title, description }) => (
-  <div className="bg-[--card] p-6 rounded-xl shadow-md transition-transform transform hover:-translate-y-1">
-    <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-[--primary]/20 text-[--primary] mb-4">
-      {icon}
-    </div>
-    <h3 className="text-lg font-bold text-[--card-foreground]">{title}</h3>
-    <p className="mt-2 text-sm text-[--muted-foreground]">{description}</p>
-  </div>
+const QuoteIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 14">
+        <path d="M6 0H2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4v1a3 3 0 0 1-3 3H2a1 1 0 0 0 0 2h1a5.006 5.006 0 0 0 5-5V2a2 2 0 0 0-2-2Zm10 0h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4v1a3 3 0 0 1-3 3h-1a1 1 0 0 0 0 2h1a5.006 5.006 0 0 0 5-5V2a2 2 0 0 0-2-2Z"/>
+    </svg>
 );
 
+// --- DEMO RECIPE DATA ---
+const demoRecipe: Recipe = {
+    recipeName: "Garlic Parmesan Chicken",
+    description: "A quick, flavorful, and juicy chicken dish coated in a garlic parmesan crust, perfect for a weeknight dinner.",
+    prepTime: "10 mins",
+    cookTime: "20 mins",
+    ingredients: ["4 chicken breasts", "1/2 cup grated Parmesan", "1 tsp garlic powder", "1 tsp dried oregano", "Salt and pepper to taste", "2 tbsp olive oil"],
+    instructions: ["Preheat oven to 400°F (200°C).", "In a bowl, mix Parmesan, garlic powder, oregano, salt, and pepper.", "Coat chicken breasts in olive oil, then press into the Parmesan mixture.", "Place on a baking sheet and bake for 20-25 minutes, or until golden and cooked through."]
+};
+
+// --- HOOK FOR SCROLL ANIMATIONS ---
+const useScrollAnimation = () => {
+    useEffect(() => {
+        const elements = document.querySelectorAll('.will-animate');
+        if (elements.length === 0) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-slide-up-fade-in');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        elements.forEach(el => observer.observe(el));
+
+        return () => observer.disconnect();
+    }, []);
+};
+
+
+// --- LANDING PAGE PROPS & COMPONENT ---
 interface LandingPageProps {
   onSignIn: () => void;
   isDarkMode: boolean;
@@ -38,77 +70,179 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, isDarkMode, toggleDarkMode }) => {
   const [modalView, setModalView] = useState<'login' | 'signup' | null>(null);
+  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+  
+  useScrollAnimation();
+
+  useEffect(() => {
+    const handleScroll = () => setIsHeaderScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <>
-      <div className="min-h-screen font-sans flex flex-col">
-        <header className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-[--foreground]">RecipeGenius</h1>
-          <div className="flex items-center gap-4">
-              <span className='text-sm text-[--muted-foreground]'>
-                  Have an account? <button onClick={() => setModalView('login')} className="font-bold text-[--primary] hover:underline">Sign In</button>
-              </span>
-              <button
-                  onClick={toggleDarkMode}
-                  className="p-2 rounded-full bg-[--card] text-[--foreground] hover:bg-[--muted] focus:outline-none focus:ring-2 focus:ring-[--ring] transition-colors"
-                  aria-label="Toggle dark mode"
-              >
-                  {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-              </button>
+      <div className="min-h-screen font-sans flex flex-col bg-[--background]">
+        <header className={`sticky top-0 z-40 w-full backdrop-blur flex-none transition-all duration-300 ${isHeaderScrolled ? 'shadow-lg border-b border-[--border]' : ''}`}>
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 className="text-xl font-bold text-[--foreground]">RecipeGenius</h1>
+            <div className="flex items-center gap-4">
+                <span className='text-sm text-[--muted-foreground]'>
+                    Have an account? <button onClick={() => setModalView('login')} className="font-bold text-[--primary] hover:underline">Sign In</button>
+                </span>
+                <button
+                    onClick={toggleDarkMode}
+                    className="p-2 rounded-full bg-[--card] text-[--foreground] hover:bg-[--muted] focus:outline-none focus:ring-2 focus:ring-[--ring] transition-colors"
+                    aria-label="Toggle dark mode"
+                >
+                    {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+                </button>
+            </div>
           </div>
         </header>
 
-        <main className="flex-grow flex items-center">
-          <div className="container mx-auto px-4 py-16 text-center">
-            <div className="max-w-3xl mx-auto">
-              <h2 className="text-4xl md:text-6xl font-extrabold text-[--foreground] tracking-tight animate-fade-in">
-                Your Personal AI <span className="text-[--primary]">Sous-Chef</span>
-              </h2>
-              <p className="mt-6 max-w-2xl mx-auto text-lg text-[--muted-foreground] animate-fade-in [animation-delay:200ms]">
-                Stop wondering what to make. Turn the ingredients you have into delicious, AI-generated recipes and save your favorites for later.
-              </p>
-              <div className="mt-10 animate-fade-in [animation-delay:400ms] space-y-4">
-                <button
-                  onClick={() => setModalView('signup')}
-                  className="w-full sm:w-auto bg-[--primary] text-[--primary-foreground] font-semibold py-3 px-8 rounded-lg shadow-lg hover:brightness-95 transition-transform transform hover:scale-105"
-                >
-                  Sign Up with Email
-                </button>
-                <div className="text-center">
-                    <span className="text-xs text-[--muted-foreground]">OR</span>
+        <main className="flex-grow">
+            {/* Hero Section */}
+            <section className="relative py-20 md:py-32 bg-gradient-to-br from-[--background] via-[--muted] to-[--background] animate-background-pan">
+                <div className="container mx-auto px-4 text-center">
+                    <div className="max-w-3xl mx-auto">
+                        <h2 className="text-4xl md:text-6xl font-extrabold text-[--foreground] tracking-tight animate-fade-in">
+                            Your Personal AI <span className="text-[--primary]">Sous-Chef</span>
+                        </h2>
+                        <p className="mt-6 max-w-2xl mx-auto text-lg text-[--muted-foreground] animate-fade-in [animation-delay:200ms]">
+                            Stop wondering what to make. Turn the ingredients you have into delicious, AI-generated recipes and save your favorites for later.
+                        </p>
+                        <div className="mt-10 animate-fade-in [animation-delay:400ms] flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <button onClick={() => setModalView('signup')} className="w-full sm:w-auto bg-[--primary] text-[--primary-foreground] font-semibold py-3 px-8 rounded-lg shadow-lg hover:brightness-95 transition-transform transform hover:scale-105">
+                                Sign Up with Email
+                            </button>
+                            <button onClick={onSignIn} className="inline-flex items-center justify-center gap-3 w-full sm:w-auto bg-white text-gray-700 font-semibold py-3 px-8 rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 transition-transform transform hover:scale-105">
+                                <GoogleIcon /> Continue with Google
+                            </button>
+                        </div>
+                        <div className="mt-8 animate-fade-in [animation-delay:500ms]">
+                            <button onClick={() => setShowDemo(!showDemo)} className="text-[--muted-foreground] hover:text-[--primary] text-sm font-semibold transition-colors">
+                                {showDemo ? 'Hide Example' : 'See an Example'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                 <button
-                  onClick={onSignIn}
-                  className="inline-flex items-center justify-center gap-3 w-full sm:w-auto bg-white text-gray-700 font-semibold py-3 px-8 rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 transition-transform transform hover:scale-105"
-                >
-                  <GoogleIcon />
-                  Continue with Google
-                </button>
-              </div>
-            </div>
+            </section>
+
+            {/* Demo Recipe Section */}
+            {showDemo && (
+                <section className="py-12 bg-[--muted]/30">
+                    <div className="container mx-auto px-4 max-w-5xl">
+                        <div className="animate-fade-in">
+                           <RecipeCard recipe={demoRecipe} isDemo={true} />
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* How It Works Section */}
+            <section className="py-20">
+                <div className="container mx-auto px-4 text-center">
+                    <h3 className="text-3xl font-bold text-[--foreground] mb-4">How It Works</h3>
+                    <p className="text-[--muted-foreground] mb-12 max-w-2xl mx-auto">Create your perfect meal in three simple steps.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                        <div className="will-animate">
+                            <div className="bg-[--card] p-8 rounded-xl shadow-md border border-[--border]">
+                                <div className="text-3xl font-bold text-[--primary]">1</div>
+                                <h4 className="text-lg font-semibold my-2">Enter Ingredients</h4>
+                                <p className="text-sm text-[--muted-foreground]">List what you have in your fridge or pantry.</p>
+                            </div>
+                        </div>
+                        <div className="will-animate [animation-delay:200ms]">
+                           <div className="bg-[--card] p-8 rounded-xl shadow-md border border-[--border]">
+                                <div className="text-3xl font-bold text-[--primary]">2</div>
+                                <h4 className="text-lg font-semibold my-2">Customize Choices</h4>
+                                <p className="text-sm text-[--muted-foreground]">Select your diet, favorite cuisine, and cooking style.</p>
+                            </div>
+                        </div>
+                        <div className="will-animate [animation-delay:400ms]">
+                           <div className="bg-[--card] p-8 rounded-xl shadow-md border border-[--border]">
+                                <div className="text-3xl font-bold text-[--primary]">3</div>
+                                <h4 className="text-lg font-semibold my-2">Get Recipes</h4>
+                                <p className="text-sm text-[--muted-foreground]">Receive unique, AI-generated recipes instantly.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
             
-            <div className="max-w-5xl mx-auto mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 text-left animate-fade-in [animation-delay:600ms]">
-              <FeatureCard 
-                icon={<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>}
-                title="Creative Inspiration"
-                description="Get unique recipe ideas based on any combination of ingredients, dietary needs, and cuisine styles."
-              />
-              <FeatureCard 
-                icon={<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h1a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.881 4.091A5.995 5.995 0 0112 3c1.339 0 2.583.42 3.62 1.155M15 21h2.288a2 2 0 001.995-1.858L21 4H3l2.712 15.142A2 2 0 007.712 21H9" /></svg>}
-                title="Reduce Food Waste"
-                description="Use up what's in your fridge. Simply list your ingredients and discover meals you can make right now."
-              />
-              <FeatureCard 
-                icon={<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>}
-                title="Personal Cookbook"
-                description="Save the recipes you love to your personal collection. Your next culinary masterpiece is always just a click away."
-              />
-            </div>
-          </div>
+            {/* Customization Showcase Section */}
+            <section className="py-20 bg-[--muted]/30">
+                <div className="container mx-auto px-4 text-center">
+                    <h3 className="text-3xl font-bold text-[--foreground] mb-4">Tailored to Your Taste</h3>
+                    <p className="text-[--muted-foreground] mb-12 max-w-2xl mx-auto">From dietary needs to world cuisines, generate recipes that fit your lifestyle.</p>
+                    <div className="max-w-4xl mx-auto space-y-8 will-animate">
+                        <div className="bg-[--card] p-6 rounded-lg shadow-sm border border-[--border]">
+                            <h4 className="font-semibold mb-3">Dietary Needs</h4>
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {["Vegan", "Gluten-Free", "Keto", "Paleo", "Pescatarian", "Low-Carb"].map(tag => (
+                                    <span key={tag} className="px-3 py-1 text-sm bg-[--primary]/10 text-[--primary] rounded-full">{tag}</span>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="bg-[--card] p-6 rounded-lg shadow-sm border border-[--border]">
+                            <h4 className="font-semibold mb-3">Cuisine Types</h4>
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {["Italian", "Mexican", "Japanese", "Indian", "Thai", "Mediterranean"].map(tag => (
+                                    <span key={tag} className="px-3 py-1 text-sm bg-[--primary]/10 text-[--primary] rounded-full">{tag}</span>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="bg-[--card] p-6 rounded-lg shadow-sm border border-[--border]">
+                            <h4 className="font-semibold mb-3">Cooking Methods</h4>
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {["Quick & Easy", "Grill", "Slow-Cook", "Bake", "Air-Fry", "One-Pot"].map(tag => (
+                                    <span key={tag} className="px-3 py-1 text-sm bg-[--primary]/10 text-[--primary] rounded-full">{tag}</span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            {/* Testimonials Section */}
+            <section className="py-20">
+                <div className="container mx-auto px-4 text-center">
+                     <h3 className="text-3xl font-bold text-[--foreground] mb-12">Don't just take our word for it</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                        <div className="bg-[--card] p-8 rounded-xl shadow-md border border-[--border] text-left will-animate">
+                            <QuoteIcon className="w-8 h-8 text-[--muted-foreground]/50 mb-4" />
+                            <p className="text-[--muted-foreground]">"This has completely changed my weeknight dinners! I use up leftovers and discover amazing new meals. It's a lifesaver."</p>
+                            <p className="font-semibold mt-4">- Sarah J.</p>
+                        </div>
+                        <div className="bg-[--card] p-8 rounded-xl shadow-md border border-[--border] text-left will-animate [animation-delay:200ms]">
+                            <QuoteIcon className="w-8 h-8 text-[--muted-foreground]/50 mb-4" />
+                            <p className="text-[--muted-foreground]">"As someone with dietary restrictions, finding interesting recipes was always a challenge. RecipeGenius makes it so easy and fun!"</p>
+                            <p className="font-semibold mt-4">- Mike R.</p>
+                        </div>
+                     </div>
+                </div>
+            </section>
+            
+            {/* Final CTA Section */}
+            <section className="py-20 bg-[--muted]/30">
+                <div className="container mx-auto px-4 text-center">
+                    <div className="max-w-2xl mx-auto will-animate">
+                        <h3 className="text-3xl font-bold text-[--foreground]">Ready to Start Cooking?</h3>
+                        <p className="mt-4 text-lg text-[--muted-foreground]">Sign up now and unlock a world of culinary possibilities. Your next favorite recipe is waiting.</p>
+                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <button onClick={() => setModalView('signup')} className="w-full sm:w-auto bg-[--primary] text-[--primary-foreground] font-semibold py-3 px-8 rounded-lg shadow-lg hover:brightness-95 transition-transform transform hover:scale-105">
+                                Create Your Free Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
 
         <footer className="container mx-auto px-4 py-6 text-center text-sm text-[--muted-foreground]">
-          <p>&copy; {new Date().getFullYear()} AI Recipe Generator. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} RecipeGenius. All rights reserved.</p>
         </footer>
       </div>
       {modalView && (

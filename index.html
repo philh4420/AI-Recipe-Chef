@@ -84,6 +84,27 @@
       .animate-pop-in {
         animation: pop-in 0.3s ease-out forwards;
       }
+      
+      @keyframes background-pan {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      .animate-background-pan {
+        background-size: 200% 200%;
+        animation: background-pan 15s ease infinite;
+      }
+
+      @keyframes slide-up-fade-in {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-slide-up-fade-in {
+        animation: slide-up-fade-in 0.6s ease-out forwards;
+      }
+      .will-animate {
+        opacity: 0;
+      }
 
       @media print {
         /* Hide everything by default */

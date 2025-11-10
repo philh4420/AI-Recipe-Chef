@@ -45,9 +45,10 @@ interface RecipeCardProps {
     onDelete?: (id: string) => Promise<void>;
     isSaved?: boolean;
     isSavedView?: boolean;
+    isDemo?: boolean;
 }
 
-export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete, isSaved, isSavedView }) => {
+export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete, isSaved, isSavedView, isDemo }) => {
     const [isSaving, setIsSaving] = useState(false);
     const [justSaved, setJustSaved] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -132,61 +133,63 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onSave, onDelete
                     </div>
                 </div>
             </div>
-             <div className="p-4 bg-[--muted]/30 border-t border-[--border] no-print">
-                 <div className="flex gap-2 items-center justify-end">
-                    {isSavedView && onDelete ? (
-                         <button
-                            onClick={handleDelete}
-                            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--destructive] bg-transparent hover:bg-[--destructive]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--destructive] focus:ring-offset-[--card] transition-colors"
-                        >
-                            <TrashIcon className="h-4 w-4" aria-hidden="true" />
-                            <span>Delete</span>
-                        </button>
-                    ) : onSave && (
-                        <button
-                            onClick={handleSave}
-                            disabled={isSaving || isSaved}
-                            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--primary] bg-transparent hover:bg-[--primary]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            {isSaving ? (
-                               <>
-                                    <svg aria-hidden="true" className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span>Saving...</span>
-                               </>
-                            ) : justSaved ? (
+            {!isDemo && (
+                <div className="p-4 bg-[--muted]/30 border-t border-[--border] no-print">
+                    <div className="flex gap-2 items-center justify-end">
+                        {isSavedView && onDelete ? (
+                            <button
+                                onClick={handleDelete}
+                                className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--destructive] bg-transparent hover:bg-[--destructive]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--destructive] focus:ring-offset-[--card] transition-colors"
+                            >
+                                <TrashIcon className="h-4 w-4" aria-hidden="true" />
+                                <span>Delete</span>
+                            </button>
+                        ) : onSave && (
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving || isSaved}
+                                className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--primary] bg-transparent hover:bg-[--primary]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {isSaving ? (
                                 <>
-                                    <CheckIcon className="h-4 w-4 text-[--primary] animate-pop-in" aria-hidden="true" />
-                                    <span>Saved!</span>
+                                        <svg aria-hidden="true" className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Saving...</span>
                                 </>
-                            ) : isSaved ? (
-                                <>
-                                   <HeartIcon className="h-4 w-4 text-[--primary]" aria-hidden="true" />
-                                    <span>Saved</span>
-                                </>
-                            ) : (
-                                 <>
-                                    <HeartIcon className="h-4 w-4" aria-hidden="true" />
-                                    <span>Save Recipe</span>
-                                </>
-                            )}
-                        </button>
-                    )}
-                    
-                    <div className="border-l border-[--border] h-6 mx-2"></div>
+                                ) : justSaved ? (
+                                    <>
+                                        <CheckIcon className="h-4 w-4 text-[--primary] animate-pop-in" aria-hidden="true" />
+                                        <span>Saved!</span>
+                                    </>
+                                ) : isSaved ? (
+                                    <>
+                                    <HeartIcon className="h-4 w-4 text-[--primary]" aria-hidden="true" />
+                                        <span>Saved</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <HeartIcon className="h-4 w-4" aria-hidden="true" />
+                                        <span>Save Recipe</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+                        
+                        <div className="border-l border-[--border] h-6 mx-2"></div>
 
-                    <button
-                        onClick={handlePrint}
-                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--muted-foreground] bg-transparent hover:bg-[--muted] hover:text-[--foreground] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] transition-colors"
-                        aria-label="Print Recipe"
-                    >
-                        <PrintIcon className="h-4 w-4" aria-hidden="true" />
-                        <span>Print</span>
-                    </button>
+                        <button
+                            onClick={handlePrint}
+                            className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--muted-foreground] bg-transparent hover:bg-[--muted] hover:text-[--foreground] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] transition-colors"
+                            aria-label="Print Recipe"
+                        >
+                            <PrintIcon className="h-4 w-4" aria-hidden="true" />
+                            <span>Print</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
         </article>
     );
 };
