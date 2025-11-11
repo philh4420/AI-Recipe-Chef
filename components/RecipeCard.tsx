@@ -1,5 +1,5 @@
 import React, { useState, useRef, useId, useEffect } from 'react';
-import type { Recipe, FirebaseUser } from '../types';
+import type { Recipe, FirebaseUser, Review } from '../types';
 import { useToast } from '../hooks/useToast';
 import { Reviews } from './Reviews';
 import { StarRating } from './StarRating';
@@ -129,16 +129,19 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, on
         if (onStartCooking) onStartCooking(currentRecipe);
     };
 
-    const handleReviewAdded = (newReview: any) => {
+    const handleReviewAdded = (newReview: Omit<Review, 'id' | 'createdAt'>) => {
         // Optimistically update the UI
         setCurrentRecipe(prev => {
             const oldTotalRating = (prev.avgRating || 0) * (prev.ratingCount || 0);
             const newRatingCount = (prev.ratingCount || 0) + 1;
             const newAvgRating = (oldTotalRating + newReview.rating) / newRatingCount;
+            const newReviews = [{...newReview, id: 'temp', createdAt: new Date().toISOString()}, ...(prev.reviews || [])];
+            
             return {
                 ...prev,
                 ratingCount: newRatingCount,
                 avgRating: newAvgRating,
+                reviews: newReviews,
             };
         });
     };
@@ -152,9 +155,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, on
                     onClick={() => setShowReviews(!showReviews)}
                     className="flex items-center gap-2 mb-4 text-sm group"
                     aria-expanded={showReviews}
+                    // Only enable button if in saved view, as reviews are only on saved recipes
+                    disabled={!isSavedView}
                 >
                     <StarRating rating={currentRecipe.avgRating || 0} />
-                    <span className="text-[--muted-foreground] group-hover:text-[--primary] transition-colors">
+                    <span className={`text-[--muted-foreground] ${isSavedView ? 'group-hover:text-[--primary]' : ''} transition-colors`}>
                         ({currentRecipe.ratingCount || 0} reviews)
                     </span>
                 </button>
@@ -211,9 +216,14 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, on
                 </div>
             )}
             
-            {showReviews && user && currentRecipe.id && (
+            {showReviews && user && currentRecipe.id && isSavedView && (
                 <div className="bg-[--muted]/20 p-8 border-y border-[--border] no-print">
-                     <Reviews user={user} recipeId={currentRecipe.id} onReviewAdded={handleReviewAdded} />
+                     <Reviews 
+                        user={user} 
+                        recipeId={currentRecipe.id} 
+                        reviews={currentRecipe.reviews || []}
+                        onReviewAdded={handleReviewAdded} 
+                    />
                 </div>
             )}
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { getReviews, addReview } from '../services/firestoreService';
+import React, { useState } from 'react';
+import { addReview } from '../services/firestoreService';
 import { uploadReviewImage } from '../services/storageService';
 import type { Review, FirebaseUser } from '../types';
 import { StarRating } from './StarRating';
@@ -8,7 +8,8 @@ import { useToast } from '../hooks/useToast';
 interface ReviewsProps {
     recipeId: string;
     user: FirebaseUser;
-    onReviewAdded: (review: Review) => void;
+    reviews: Review[];
+    onReviewAdded: (review: Omit<Review, 'id' | 'createdAt'>) => void;
 }
 
 const PhotoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -17,11 +18,7 @@ const PhotoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, onReviewAdded }) => {
-    const [reviews, setReviews] = useState<Review[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    
+export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, reviews, onReviewAdded }) => {
     // Form state
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
@@ -30,23 +27,6 @@ export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, onReviewAdded 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { addToast } = useToast();
-
-    const fetchReviews = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const fetchedReviews = await getReviews(recipeId);
-            setReviews(fetchedReviews);
-        } catch (err) {
-            setError('Could not load reviews.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [recipeId]);
-
-    useEffect(() => {
-        fetchReviews();
-    }, [fetchReviews]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -66,6 +46,8 @@ export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, onReviewAdded 
             addToast({ message: 'Please select a rating.', type: 'error' });
             return;
         }
+        if (!user || !recipeId) return;
+
         setIsSubmitting(true);
         try {
             let imageUrl: string | undefined = undefined;
@@ -73,7 +55,7 @@ export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, onReviewAdded 
                 imageUrl = await uploadReviewImage(imageFile, user.uid, recipeId);
             }
 
-            const newReview: Omit<Review, 'id' | 'createdAt'> = {
+            const newReviewData = {
                 recipeId,
                 userId: user.uid,
                 userName: user.displayName || 'Anonymous',
@@ -83,11 +65,10 @@ export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, onReviewAdded 
                 imageUrl,
             };
 
-            await addReview(newReview);
+            await addReview(user.uid, recipeId, newReviewData);
             
-            // Clear form and optimistically update UI
-            onReviewAdded(newReview as Review); // Pass to parent for optimistic update
-            setReviews(prev => [{...newReview, createdAt: new Date(), id: 'temp-id'}, ...prev]);
+            // Clear form and call parent for optimistic update
+            onReviewAdded(newReviewData);
             setRating(0);
             setComment('');
             setImageFile(null);
@@ -119,7 +100,7 @@ export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, onReviewAdded 
 
     return (
         <div className="space-y-6">
-            <h3 className="text-xl font-bold text-[--foreground]">Reviews & Photos</h3>
+            <h3 className="text-xl font-bold text-[--foreground]">Your Notes & Reviews</h3>
             {/* Review Form */}
             <div className="bg-[--card] p-4 rounded-lg border border-[--border]">
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,7 +114,7 @@ export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, onReviewAdded 
                             id="comment"
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            placeholder="Share your experience..."
+                            placeholder="Add your notes, changes, or experience..."
                             rows={3}
                             className="block w-full border border-[--border] bg-[--input] rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[--ring] sm:text-sm"
                         />
@@ -152,17 +133,15 @@ export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, onReviewAdded 
                          )}
                     </div>
                     <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto flex items-center justify-center py-2 px-5 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-[--primary-foreground] bg-[--primary] hover:brightness-95 disabled:bg-[--muted]">
-                        {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                        {isSubmitting ? 'Submitting...' : 'Save Note'}
                     </button>
                 </form>
             </div>
             
             {/* Reviews List */}
             <div>
-                {isLoading && <p className="text-center text-[--muted-foreground]">Loading reviews...</p>}
-                {error && <p className="text-center text-[--destructive]">{error}</p>}
-                {!isLoading && !error && reviews.length === 0 && <p className="text-center text-[--muted-foreground] py-4">Be the first to review this recipe!</p>}
-                {!isLoading && !error && reviews.length > 0 && (
+                {reviews.length === 0 && <p className="text-center text-[--muted-foreground] py-4">Be the first to add a note to this recipe!</p>}
+                {reviews.length > 0 && (
                     <div className="space-y-2">
                         {reviews.map(review => <ReviewItem key={review.id} review={review} />)}
                     </div>

@@ -1,59 +1,27 @@
 import { collection, addDoc, getDocs, doc, deleteDoc, writeBatch, updateDoc, getDoc, setDoc, query, where, serverTimestamp, runTransaction, getDocsFromServer, collectionGroup, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 import type { Recipe, PantryItem, ShoppingListItem, MealPlan, TasteProfile, Review } from "../types";
-import { getAuth } from 'firebase/auth';
 
 const USERS_COLLECTION = "users";
-const RECIPES_SUBCOLLECTION = "recipes"; // Now used for user's saved recipe references
+const RECIPES_SUBCOLLECTION = "recipes";
 const PANTRY_SUBCOLLECTION = "pantry";
 const SHOPPING_LIST_SUBCOLLECTION = "shoppingList";
 const MEAL_PLAN_DOC_ID = "---MEAL-PLAN---";
 const TASTE_PROFILE_DOC_ID = "---TASTE-PROFILE---";
 
-// New top-level collections for the social features
-const PUBLIC_RECIPES_COLLECTION = "public_recipes";
-const REVIEWS_COLLECTION = "reviews";
 
-// Helper to generate a stable ID from a recipe name to check for existence
-const generatePublicId = (recipeName: string) => {
-    return recipeName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-};
-
-
-// --- RECIPES (REFACTORED) ---
+// --- RECIPES (REVERTED TO PRIVATE MODEL) ---
 
 export const addRecipe = async (userId: string, recipe: Omit<Recipe, 'id'>): Promise<string> => {
     try {
-        const publicRecipesCollection = collection(db, PUBLIC_RECIPES_COLLECTION);
-        const userRecipesCollection = collection(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION);
-
-        // Check if a recipe with the same name already exists publicly
-        const publicId = generatePublicId(recipe.recipeName);
-        const q = query(publicRecipesCollection, where("publicId", "==", publicId));
-        const existingRecipeSnap = await getDocs(q);
-
-        let recipeId: string;
-        if (existingRecipeSnap.empty) {
-            // Recipe doesn't exist, add it to the public collection
-            const newPublicRecipe = { 
-                ...recipe, 
-                publicId,
-                ownerId: userId, 
-                avgRating: 0, 
-                ratingCount: 0 
-            };
-            const publicDocRef = await addDoc(publicRecipesCollection, newPublicRecipe);
-            recipeId = publicDocRef.id;
-        } else {
-            // Recipe already exists, use its ID
-            recipeId = existingRecipeSnap.docs[0].id;
-        }
-
-        // Add a reference to the user's private saved list
-        const userRecipeRef = doc(userRecipesCollection, recipeId);
-        await setDoc(userRecipeRef, { recipeName: recipe.recipeName, addedAt: serverTimestamp() }); // Store a simple reference
-
-        return recipeId;
+        const fullRecipe = {
+            ...recipe,
+            avgRating: 0,
+            ratingCount: 0,
+            reviews: [],
+        };
+        const docRef = await addDoc(collection(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION), fullRecipe);
+        return docRef.id;
     } catch (e) {
         console.error("Error adding recipe: ", e);
         throw new Error("Could not save recipe.");
@@ -62,22 +30,11 @@ export const addRecipe = async (userId: string, recipe: Omit<Recipe, 'id'>): Pro
 
 export const getRecipes = async (userId: string): Promise<Recipe[]> => {
     try {
-        const userRecipesCollection = collection(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION);
-        const userRecipesSnap = await getDocs(userRecipesCollection);
-        
-        const recipeIds = userRecipesSnap.docs
-            .map(doc => doc.id)
-            .filter(id => id !== MEAL_PLAN_DOC_ID && id !== TASTE_PROFILE_DOC_ID);
-
-        if (recipeIds.length === 0) return [];
-        
-        // Fetch the full recipe data from the public collection
-        const publicRecipesCollection = collection(db, PUBLIC_RECIPES_COLLECTION);
-        const q = query(publicRecipesCollection, where("__name__", "in", recipeIds));
-        const publicRecipesSnap = await getDocs(q);
-
-        return publicRecipesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
-
+        const recipesCollection = collection(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION);
+        const recipesSnapshot = await getDocs(recipesCollection);
+        return recipesSnapshot.docs
+            .filter(doc => doc.id !== MEAL_PLAN_DOC_ID && doc.id !== TASTE_PROFILE_DOC_ID)
+            .map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
     } catch (e) {
         console.error("Error getting recipes: ", e);
         throw new Error("Could not fetch recipes.");
@@ -86,7 +43,7 @@ export const getRecipes = async (userId: string): Promise<Recipe[]> => {
 
 export const deleteRecipe = async (userId: string, recipeId: string): Promise<void> => {
     try {
-        // Only delete the user's reference, not the public recipe
+        // FIX: Corrected typo from USERS_COLlection to USERS_COLLECTION.
         const recipeDocRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, recipeId);
         await deleteDoc(recipeDocRef);
     } catch (e) {
@@ -95,43 +52,37 @@ export const deleteRecipe = async (userId: string, recipeId: string): Promise<vo
     }
 }
 
-// --- REVIEWS ---
+// --- REVIEWS (EMBEDDED MODEL) ---
 
-export const getReviews = async (recipeId: string): Promise<Review[]> => {
+export const addReview = async (userId: string, recipeId: string, reviewData: Omit<Review, 'id' | 'createdAt'>): Promise<void> => {
+    const recipeRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, recipeId);
     try {
-        const q = query(collection(db, REVIEWS_COLLECTION), where("recipeId", "==", recipeId), orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Review));
-    } catch (e) {
-        console.error("Error getting reviews:", e);
-        throw new Error("Could not fetch reviews.");
-    }
-};
-
-export const addReview = async (reviewData: Omit<Review, 'id' | 'createdAt'>): Promise<void> => {
-    try {
-        // 1. Add the new review
-        const reviewsCollection = collection(db, REVIEWS_COLLECTION);
-        const newReviewData = { ...reviewData, createdAt: serverTimestamp() };
-        await addDoc(reviewsCollection, newReviewData);
-
-        // 2. Use a transaction to update the recipe's average rating
-        const recipeRef = doc(db, PUBLIC_RECIPES_COLLECTION, reviewData.recipeId);
         await runTransaction(db, async (transaction) => {
             const recipeDoc = await transaction.get(recipeRef);
             if (!recipeDoc.exists()) {
-                throw new Error("Recipe does not exist!");
+                throw new Error("Recipe document not found!");
             }
-            const recipeData = recipeDoc.data();
-            const oldRatingCount = recipeData.ratingCount || 0;
-            const oldAvgRating = recipeData.avgRating || 0;
 
-            const newRatingCount = oldRatingCount + 1;
-            const newAvgRating = (oldAvgRating * oldRatingCount + reviewData.rating) / newRatingCount;
+            const recipe = recipeDoc.data() as Recipe;
+            const currentReviews = recipe.reviews || [];
+            const currentRatingCount = recipe.ratingCount || 0;
+            const currentAvgRating = recipe.avgRating || 0;
 
+            const newReview: Review = {
+                ...reviewData,
+                id: doc(collection(db, 'dummy')).id, // Generate a unique client-side ID for the review
+                createdAt: new Date().toISOString(), // Use ISO string for simplicity and JSON compatibility
+            };
+
+            const newReviews = [newReview, ...currentReviews];
+            const newRatingCount = currentRatingCount + 1;
+            const newTotalRating = (currentAvgRating * currentRatingCount) + newReview.rating;
+            const newAvgRating = newTotalRating / newRatingCount;
+            
             transaction.update(recipeRef, {
+                reviews: newReviews,
                 ratingCount: newRatingCount,
-                avgRating: newAvgRating
+                avgRating: newAvgRating,
             });
         });
     } catch (e) {

@@ -2,8 +2,6 @@ import type { User } from 'firebase/auth';
 
 export interface Recipe {
   id?: string;
-  publicId?: string; // A stable ID for querying public reviews
-  ownerId?: string; // The UID of the user who first saved this recipe
   recipeName: string;
   description: string;
   prepTime: string;
@@ -12,6 +10,7 @@ export interface Recipe {
   instructions: string[];
   avgRating?: number;
   ratingCount?: number;
+  reviews?: Review[];
 }
 
 export interface InputFormProps {
