@@ -48,8 +48,18 @@ const recipeSchema = {
       },
       description: "Step-by-step instructions to prepare the dish."
     },
+    beveragePairing: {
+      type: Type.OBJECT,
+      description: "Suggestions for wine, beer, and non-alcoholic beverages that pair well with the dish.",
+      properties: {
+        wine: { type: Type.STRING, description: "A specific wine pairing suggestion, e.g., 'A crisp Sauvignon Blanc'." },
+        beer: { type: Type.STRING, description: "A specific beer pairing suggestion, e.g., 'A light Pilsner'." },
+        nonAlcoholic: { type: Type.STRING, description: "A creative non-alcoholic pairing, e.g., 'Sparkling cranberry and lime spritzer'." }
+      },
+      required: ["wine", "beer", "nonAlcoholic"]
+    }
   },
-  required: ["recipeName", "description", "prepTime", "cookTime", "ingredients", "instructions"],
+  required: ["recipeName", "description", "prepTime", "cookTime", "ingredients", "instructions", "beveragePairing"],
 };
 
 export default async function handler(
@@ -73,7 +83,7 @@ export default async function handler(
   } = payload;
     
   // Dynamically build the prompt based on provided data
-  let prompt = `Generate 3 recipes based on the following user-provided criteria.`;
+  let prompt = `Generate 3 recipes based on the following user-provided criteria. For each recipe, also provide a "beveragePairing" object containing suggestions for a wine, a beer, and a non-alcoholic drink that would complement the dish.`;
   
   if (ingredients) prompt += `\n- Main Ingredients: ${ingredients}`;
   if (mealType) prompt += `\n- Meal Type: ${mealType}`;

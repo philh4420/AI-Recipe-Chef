@@ -1,5 +1,11 @@
 import type { User } from 'firebase/auth';
 
+export interface BeveragePairing {
+  wine: string;
+  beer: string;
+  nonAlcoholic: string;
+}
+
 export interface Recipe {
   id?: string;
   recipeName: string;
@@ -13,6 +19,7 @@ export interface Recipe {
   reviews?: Review[];
   ownerId?: string;
   ownerName?: string;
+  beveragePairing?: BeveragePairing;
 }
 
 export interface InputFormProps {

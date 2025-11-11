@@ -52,6 +52,31 @@ const ShareIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   </svg>
 );
 
+const WineIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75V3m0 0L8.25 3M12 3l3.75 0" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21h9" />
+  </svg>
+);
+
+const BeerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h9v7.5a4.5 4.5 0 01-4.5 4.5h0a4.5 4.5 0 01-4.5-4.5V7.5z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 7.5V6a1.5 1.5 0 00-1.5-1.5h-6A1.5 1.5 0 007.5 6v1.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5c.621 0 1.125.504 1.125 1.125v1.75a1.125 1.125 0 01-1.125 1.125h-9.75" />
+  </svg>
+);
+
+const JuiceIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 4.5l.42-1.05a1.125 1.125 0 012.16 0l.42 1.05m-3 0h3m-3 1.5h.008v.008H9.75v-.008zM12 21a8.25 8.25 0 008.25-8.25H3.75A8.25 8.25 0 0012 21z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 12.75V3.75" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12.75h16.5" />
+  </svg>
+);
+
+
 const Section: React.FC<{ title: string; children: React.ReactNode; extra?: React.ReactNode }> = ({ title, children, extra }) => (
     <div>
         <div className="flex justify-between items-center mb-3">
@@ -199,6 +224,37 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, on
                         <div><span className="font-semibold">Cook:</span> {currentRecipe.cookTime}</div>
                     </div>
                 </div>
+
+                {currentRecipe.beveragePairing && (
+                    <>
+                        <hr className="border-[--border] my-6" />
+                        <Section title="Beverage Pairings">
+                            <div className="space-y-3 text-sm">
+                                <div className="flex items-start gap-3">
+                                    <WineIcon className="h-5 w-5 text-[--primary] mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <span className="font-semibold text-[--foreground]">Wine:</span>
+                                        <span className="text-[--muted-foreground] ml-2">{currentRecipe.beveragePairing.wine}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <BeerIcon className="h-5 w-5 text-[--primary] mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <span className="font-semibold text-[--foreground]">Beer:</span>
+                                        <span className="text-[--muted-foreground] ml-2">{currentRecipe.beveragePairing.beer}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <JuiceIcon className="h-5 w-5 text-[--primary] mt-0.5 flex-shrink-0" />
+                                    <div>
+                                         <span className="font-semibold text-[--foreground]">Non-Alcoholic:</span>
+                                         <span className="text-[--muted-foreground] ml-2">{currentRecipe.beveragePairing.nonAlcoholic}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </Section>
+                    </>
+                )}
                 
                 <hr className="border-[--border] my-6" />
 

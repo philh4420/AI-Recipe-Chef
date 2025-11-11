@@ -37,8 +37,18 @@ const recipeSchema = {
       },
       description: "Step-by-step instructions to prepare the dish."
     },
+    beveragePairing: {
+      type: Type.OBJECT,
+      description: "Suggestions for wine, beer, and non-alcoholic beverages that pair well with the dish.",
+      properties: {
+        wine: { type: Type.STRING, description: "A specific wine pairing suggestion, e.g., 'A crisp Sauvignon Blanc'." },
+        beer: { type: Type.STRING, description: "A specific beer pairing suggestion, e.g., 'A light Pilsner'." },
+        nonAlcoholic: { type: Type.STRING, description: "A creative non-alcoholic pairing, e.g., 'Sparkling cranberry and lime spritzer'." }
+      },
+      required: ["wine", "beer", "nonAlcoholic"]
+    }
   },
-  required: ["recipeName", "description", "prepTime", "cookTime", "ingredients", "instructions"],
+  required: ["recipeName", "description", "prepTime", "cookTime", "ingredients", "instructions", "beveragePairing"],
 };
 
 export default async function handler(
@@ -75,6 +85,7 @@ export default async function handler(
 
     Please generate a new version of this recipe that fits the modification request.
     The new recipe should have a slightly different, creative name to reflect the change. For example, if the original recipe is "Classic Chicken Soup" and the modification is "make it spicy", the new name could be "Spicy Chipotle Chicken Soup".
+    Also, provide new beverage pairings (wine, beer, non-alcoholic) that are suitable for this modified version.
     Return the complete new recipe in the specified JSON format.
   `;
 
