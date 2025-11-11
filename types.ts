@@ -47,3 +47,20 @@ export interface ShoppingListItem {
   recipeName: string;
   isChecked: boolean;
 }
+
+// New types for Meal Planner
+export type DayOfWeek = 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+
+export const DAYS_OF_WEEK: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+export interface PlannedRecipe {
+    id: string;
+    recipeName: string;
+}
+
+export type MealPlan = {
+    [key in DayOfWeek]?: PlannedRecipe | null;
+};
+
+// Shared View type
+export type View = 'generator' | 'saved' | 'pantry' | 'shoppingList' | 'mealPlanner';

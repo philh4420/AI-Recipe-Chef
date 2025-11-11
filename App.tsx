@@ -3,10 +3,11 @@ import { generateRecipes, modifyRecipe } from './services/geminiService';
 import { 
     addRecipe, deleteRecipe, getRecipes,
     getPantryItems, addPantryItem, deletePantryItem,
-    getShoppingListItems, addShoppingListItems, updateShoppingListItem, deleteShoppingListItems
+    getShoppingListItems, addShoppingListItems, updateShoppingListItem, deleteShoppingListItems,
+    getMealPlan, updateMealPlan
 } from './services/firestoreService';
 import { onAuthStateChange, signInWithGoogle, signOutUser } from './services/authService';
-import type { Recipe, FormData, FirebaseUser, PantryItem, ShoppingListItem } from './types';
+import type { Recipe, FormData, FirebaseUser, PantryItem, ShoppingListItem, View, MealPlan, PlannedRecipe } from './types';
 import { InputForm } from './components/InputForm';
 import { Header } from './components/Header';
 import { RecipeList } from './components/RecipeList';
@@ -16,6 +17,7 @@ import { ShoppingList } from './components/ShoppingList';
 import { LandingPage } from './components/LandingPage';
 import { Footer } from './components/Footer';
 import { CookingMode } from './components/CookingMode';
+import { MealPlanner } from './components/MealPlanner';
 import { useToast } from './hooks/useToast';
 
 const App: React.FC = () => {
@@ -25,10 +27,11 @@ const App: React.FC = () => {
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
     const [shoppingListItems, setShoppingListItems] = useState<ShoppingListItem[]>([]);
+    const [mealPlan, setMealPlan] = useState<MealPlan>({});
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [modifyingRecipeIndex, setModifyingRecipeIndex] = useState<number | null>(null);
     const [error, setError] = useState<React.ReactNode | null>(null);
-    const [view, setView] = useState<'generator' | 'saved' | 'pantry' | 'shoppingList'>('generator');
+    const [view, setView] = useState<View>('generator');
     const [lastFormData, setLastFormData] = useState<FormData | null>(null);
     const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
 
@@ -56,6 +59,7 @@ const App: React.FC = () => {
             setSavedRecipes([]);
             setPantryItems([]);
             setShoppingListItems([]);
+            setMealPlan({});
         }
     }, [user]);
     
@@ -75,8 +79,7 @@ const App: React.FC = () => {
     const fetchUserData = () => {
         if (!user) return;
 
-        // Fetch data concurrently, but handle errors individually
-        // so that one failed request doesn't block others.
+        // Fetch data concurrently
         getRecipes(user.uid)
             .then(setSavedRecipes)
             .catch(err => {
@@ -96,6 +99,13 @@ const App: React.FC = () => {
             .catch(err => {
                 console.error("Failed to fetch shopping list items:", err);
                 addToast({ message: 'Could not load your shopping list.', type: 'error' });
+            });
+        
+        getMealPlan(user.uid)
+            .then(setMealPlan)
+            .catch(err => {
+                console.error("Failed to fetch meal plan:", err);
+                addToast({ message: 'Could not load your meal plan.', type: 'error' });
             });
     };
     
@@ -252,6 +262,64 @@ const App: React.FC = () => {
             addToast({ message: 'Failed to clear shopping list.', type: 'error' });
         }
     };
+    
+    const handleUpdateMealPlan = async (newPlan: MealPlan) => {
+        if (!user) return;
+        try {
+            await updateMealPlan(user.uid, newPlan);
+            setMealPlan(newPlan);
+            addToast({ message: 'Meal plan updated!', type: 'success' });
+        } catch (err) {
+            addToast({ message: 'Failed to update meal plan.', type: 'error' });
+        }
+    };
+
+    const handleGenerateWeeklyShoppingList = async () => {
+        if (!user) return;
+
+        const plannedRecipes = Object.values(mealPlan).filter((p): p is PlannedRecipe => !!p);
+
+        if (plannedRecipes.length === 0) {
+            addToast({ message: "Your meal plan is empty. Add some recipes first!", type: 'error' });
+            return;
+        }
+
+        const recipesForWeek = savedRecipes.filter(r => r.id && plannedRecipes.some(p => p.id === r.id));
+        
+        const allIngredients = recipesForWeek.flatMap(r => r.ingredients);
+        const pantryNames = new Set(pantryItems.map(item => item.name.toLowerCase().trim()));
+
+        const missingIngredients = allIngredients
+            .map(ing => ({ original: ing, clean: ing.split(',')[0].toLowerCase().trim() }))
+            .filter(ingObj => !pantryNames.has(ingObj.clean))
+            .map(ingObj => ingObj.original);
+        
+        const uniqueMissingIngredients = [...new Set(missingIngredients)];
+        
+        if (uniqueMissingIngredients.length === 0) {
+            addToast({ message: "You have all the ingredients for your planned meals!", type: 'success' });
+            setView('shoppingList');
+            return;
+        }
+
+        const newShoppingListItems = uniqueMissingIngredients.map(name => ({
+// Fix: Explicitly convert `name` to a string to satisfy the type requirement.
+// The compiler inferred `name` as `unknown`, causing a type mismatch.
+            name: String(name),
+            recipeName: "Weekly Meal Plan",
+            isChecked: false,
+        }));
+        
+        try {
+            await addShoppingListItems(user.uid, newShoppingListItems);
+            getShoppingListItems(user.uid).then(setShoppingListItems); // Refetch list
+            addToast({ message: `Added ${newShoppingListItems.length} items to your shopping list.`, type: 'success' });
+            setView('shoppingList');
+        } catch (err) {
+            addToast({ message: 'Failed to generate shopping list.', type: 'error' });
+        }
+    };
+
 
     const handleClear = () => setGeneratedRecipes([]);
     const handleStartCooking = (recipe: Recipe) => setCookingRecipe(recipe);
@@ -321,6 +389,15 @@ const App: React.FC = () => {
                         items={shoppingListItems}
                         onToggleItem={handleToggleShoppingListItem}
                         onClearList={handleClearShoppingList}
+                    />
+                );
+            case 'mealPlanner':
+                return (
+                    <MealPlanner
+                        savedRecipes={savedRecipes}
+                        mealPlan={mealPlan}
+                        onUpdatePlan={handleUpdateMealPlan}
+                        onGenerateList={handleGenerateWeeklyShoppingList}
                     />
                 );
             default:

@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { FirebaseUser } from '../types';
-
-type View = 'generator' | 'saved' | 'pantry' | 'shoppingList';
+import type { FirebaseUser, View } from '../types';
 
 interface HeaderProps {
     user: FirebaseUser | null;
@@ -89,6 +87,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onSignOut, isDarkMode, tog
                         <NavButton targetView="saved">Saved Recipes</NavButton>
                         <NavButton targetView="pantry">Pantry</NavButton>
                         <NavButton targetView="shoppingList">Shopping List</NavButton>
+                        <NavButton targetView="mealPlanner">Meal Planner</NavButton>
                     </nav>
 
                     {/* Right side */}
@@ -157,6 +156,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onSignOut, isDarkMode, tog
                     <NavButton targetView="saved" isMobile>Saved Recipes</NavButton>
                     <NavButton targetView="pantry" isMobile>Pantry</NavButton>
                     <NavButton targetView="shoppingList" isMobile>Shopping List</NavButton>
+                    <NavButton targetView="mealPlanner" isMobile>Meal Planner</NavButton>
                     <div className="border-b border-[--border] my-2"></div>
                      <button onClick={onSignOut} className="w-full text-left px-4 py-2 text-base text-[--destructive] hover:bg-[--destructive]/10 rounded-md">
                         Sign Out

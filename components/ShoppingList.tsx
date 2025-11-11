@@ -17,8 +17,9 @@ const ShoppingCartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 export const ShoppingList: React.FC<ShoppingListProps> = ({ items, onToggleItem, onClearList }) => {
 
     const groupedItems = useMemo(() => {
-        // FIX: Explicitly type the accumulator in the reduce function to ensure correct type inference for groupedItems.
-        return items.reduce((acc: Record<string, ShoppingListItem[]>, item) => {
+        // Fix: By providing a generic to `reduce`, we ensure the accumulator `acc`
+        // and the return value are correctly typed, which fixes the downstream error.
+        return items.reduce<Record<string, ShoppingListItem[]>>((acc, item) => {
             const { recipeName } = item;
             if (!acc[recipeName]) {
                 acc[recipeName] = [];

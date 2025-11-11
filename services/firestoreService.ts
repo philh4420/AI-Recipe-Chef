@@ -1,6 +1,6 @@
-import { collection, addDoc, getDocs, doc, deleteDoc, writeBatch, query, where, updateDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, deleteDoc, writeBatch, query, where, updateDoc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import type { Recipe, PantryItem, ShoppingListItem } from "../types";
+import type { Recipe, PantryItem, ShoppingListItem, MealPlan } from "../types";
 
 const USERS_COLLECTION = "users";
 const RECIPES_SUBCOLLECTION = "recipes";
@@ -129,5 +129,34 @@ export const deleteShoppingListItems = async (userId: string, itemIds: string[])
     } catch (e) {
         console.error("Error deleting shopping list items: ", e);
         throw new Error("Could not delete items from shopping list.");
+    }
+};
+
+// --- MEAL PLAN ---
+
+const MEAL_PLAN_SUBCOLLECTION = "mealPlan";
+const WEEKLY_PLAN_DOC = "weeklyPlan";
+
+export const getMealPlan = async (userId: string): Promise<MealPlan> => {
+    try {
+        const mealPlanDocRef = doc(db, USERS_COLLECTION, userId, MEAL_PLAN_SUBCOLLECTION, WEEKLY_PLAN_DOC);
+        const docSnap = await getDoc(mealPlanDocRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as MealPlan;
+        }
+        return {}; // Return empty object if no plan exists yet
+    } catch (e) {
+        console.error("Error getting meal plan: ", e);
+        throw new Error("Could not fetch meal plan.");
+    }
+};
+
+export const updateMealPlan = async (userId: string, mealPlan: MealPlan): Promise<void> => {
+    try {
+        const mealPlanDocRef = doc(db, USERS_COLLECTION, userId, MEAL_PLAN_SUBCOLLECTION, WEEKLY_PLAN_DOC);
+        await setDoc(mealPlanDocRef, mealPlan); // Overwrite the whole document
+    } catch (e) {
+        console.error("Error updating meal plan: ", e);
+        throw new Error("Could not update meal plan.");
     }
 };
