@@ -7,6 +7,7 @@ const RECIPES_SUBCOLLECTION = "recipes";
 const PANTRY_SUBCOLLECTION = "pantry";
 const SHOPPING_LIST_SUBCOLLECTION = "shoppingList";
 const MEAL_PLAN_DOC_ID = "---MEAL-PLAN---"; // Special ID to store the meal plan within the recipes collection to reuse permissions
+const TASTE_PROFILE_DOC_ID = "---TASTE-PROFILE---"; // Special ID for the taste profile
 
 // --- RECIPES ---
 
@@ -26,7 +27,8 @@ export const getRecipes = async (userId: string): Promise<Recipe[]> => {
         const userRecipesCollection = collection(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION);
         const querySnapshot = await getDocs(userRecipesCollection);
         return querySnapshot.docs
-            .filter(doc => doc.id !== MEAL_PLAN_DOC_ID) // Exclude the special meal plan document
+            // Exclude special documents for meal plan and taste profile
+            .filter(doc => doc.id !== MEAL_PLAN_DOC_ID && doc.id !== TASTE_PROFILE_DOC_ID) 
             .map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
     } catch (e) {
         console.error("Error getting recipes: ", e);
@@ -165,10 +167,10 @@ export const updateMealPlan = async (userId: string, mealPlan: MealPlan): Promis
 
 export const getTasteProfile = async (userId: string): Promise<TasteProfile> => {
     try {
-        const userDocRef = doc(db, USERS_COLLECTION, userId);
-        const docSnap = await getDoc(userDocRef);
-        if (docSnap.exists() && docSnap.data().tasteProfile) {
-            return docSnap.data().tasteProfile as TasteProfile;
+        const profileDocRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, TASTE_PROFILE_DOC_ID);
+        const docSnap = await getDoc(profileDocRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as TasteProfile;
         }
         return {}; // Return empty object if no profile exists
     } catch (e) {
@@ -179,9 +181,8 @@ export const getTasteProfile = async (userId: string): Promise<TasteProfile> => 
 
 export const updateTasteProfile = async (userId: string, tasteProfile: TasteProfile): Promise<void> => {
     try {
-        const userDocRef = doc(db, USERS_COLLECTION, userId);
-        // Use set with merge to create or update the profile field without overwriting other user data
-        await setDoc(userDocRef, { tasteProfile }, { merge: true });
+        const profileDocRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, TASTE_PROFILE_DOC_ID);
+        await setDoc(profileDocRef, tasteProfile);
     } catch (e) {
         console.error("Error updating taste profile: ", e);
         throw new Error("Could not update taste profile.");
