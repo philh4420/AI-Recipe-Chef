@@ -232,7 +232,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle, is
                  <Section>
                     <AnimatedDiv>
                         <SectionTitle>How It Works</SectionTitle>
-                        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto text-center">
+                        <div className="grid md:grid-cols-4 gap-8 max-w-7xl mx-auto text-center">
                             <div className="flex flex-col items-center">
                                 <div className="bg-[--primary]/10 text-[--primary] p-4 rounded-full mb-4">
                                     <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7m-6 3v3m6-3v3" /></svg>
@@ -254,6 +254,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle, is
                                 <h3 className="text-xl font-semibold mb-2">3. Get Recipes</h3>
                                 <p className="text-[--muted-foreground]">Instantly receive creative, delicious recipes complete with instructions.</p>
                             </div>
+                             <div className="flex flex-col items-center">
+                                <div className="bg-[--primary]/10 text-[--primary] p-4 rounded-full mb-4">
+                                    <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>
+                                <h3 className="text-xl font-semibold mb-2">4. Plan & Organize</h3>
+                                <p className="text-[--muted-foreground]">Save favorites, drag them to a meal plan, and auto-generate a shopping list.</p>
+                            </div>
                         </div>
                     </AnimatedDiv>
                 </Section>
@@ -263,16 +270,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSignInWithGoogle, is
                         <SectionTitle>Core Features</SectionTitle>
                         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                             <div className="bg-[--card] p-6 rounded-xl shadow-sm border border-[--border]">
-                                <h3 className="text-lg font-semibold mb-2 flex items-center gap-3"><svg className="h-6 w-6 text-[--primary]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>Creative Inspiration</h3>
-                                <p className="text-sm text-[--muted-foreground]">Get unique recipe ideas based on any combination of ingredients, dietary needs, and cuisine styles.</p>
+                                <h3 className="text-lg font-semibold mb-2 flex items-center gap-3"><svg className="h-6 w-6 text-[--primary]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>Personalized Inspiration</h3>
+                                <p className="text-sm text-[--muted-foreground]">Get unique recipe ideas based on any ingredients. Personalize results with your Taste Profile for suggestions tailored just for you.</p>
                             </div>
                             <div className="bg-[--card] p-6 rounded-xl shadow-sm border border-[--border]">
-                               <h3 className="text-lg font-semibold mb-2 flex items-center gap-3"><svg className="h-6 w-6 text-[--primary]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>Reduce Food Waste</h3>
-                               <p className="text-sm text-[--muted-foreground]">Use up what's in your fridge. Simply list your ingredients and discover meals you can make right now.</p>
+                               <h3 className="text-lg font-semibold mb-2 flex items-center gap-3"><svg className="h-6 w-6 text-[--primary]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>Reduce Food Waste</h3>
+                               <p className="text-sm text-[--muted-foreground]">Use up what's in your fridge. Our AI finds recipes for your ingredients, and the virtual pantry helps you track what you have.</p>
                             </div>
                             <div className="bg-[--card] p-6 rounded-xl shadow-sm border border-[--border]">
-                                <h3 className="text-lg font-semibold mb-2 flex items-center gap-3"><svg className="h-6 w-6 text-[--primary]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>Personal Cookbook</h3>
-                                <p className="text-sm text-[--muted-foreground]">Save the recipes you love to your personal collection. Your next culinary masterpiece is always just a click away.</p>
+                                <h3 className="text-lg font-semibold mb-2 flex items-center gap-3"><svg className="h-6 w-6 text-[--primary]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>Your Culinary Hub</h3>
+                                <p className="text-sm text-[--muted-foreground]">Save recipes to build your digital cookbook. Organize your week with the meal planner, generate shopping lists, and leave personal ratings and notes.</p>
                             </div>
                         </div>
                      </AnimatedDiv>
