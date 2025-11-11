@@ -5,7 +5,8 @@ import {
     getPantryItems, addPantryItem, deletePantryItem,
     getShoppingListItems, addShoppingListItems, updateShoppingListItem, deleteShoppingListItems,
     getMealPlan, updateMealPlan,
-    getTasteProfile, updateTasteProfile
+    getTasteProfile, updateTasteProfile,
+    shareRecipe, unshareRecipe, getPublicRecipe
 } from './services/firestoreService';
 import { onAuthStateChange, signInWithGoogle, signOutUser } from './services/authService';
 import type { Recipe, FormData, FirebaseUser, PantryItem, ShoppingListItem, View, MealPlan, PlannedRecipe, TasteProfile } from './types';
@@ -20,6 +21,7 @@ import { Footer } from './components/Footer';
 import { CookingMode } from './components/CookingMode';
 import { MealPlanner } from './components/MealPlanner';
 import { Profile } from './components/Profile';
+import { PublicRecipeView } from './components/PublicRecipeView';
 import { useToast } from './hooks/useToast';
 
 const App: React.FC = () => {
@@ -37,6 +39,12 @@ const App: React.FC = () => {
     const [view, setView] = useState<View>('generator');
     const [lastFormData, setLastFormData] = useState<any | null>(null);
     const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
+    
+    // State for public recipe view
+    const [publicRecipe, setPublicRecipe] = useState<Recipe | null>(null);
+    const [isPublicViewLoading, setIsPublicViewLoading] = useState<boolean>(true);
+    const [publicViewError, setPublicViewError] = useState<string | null>(null);
+
 
     const [isDarkMode, setIsDarkMode] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -46,6 +54,31 @@ const App: React.FC = () => {
     });
 
     const { addToast } = useToast();
+
+    // Check for public recipe link on initial load
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const publicId = urlParams.get('recipe');
+
+        if (publicId) {
+            getPublicRecipe(publicId)
+                .then(recipe => {
+                    if (recipe) {
+                        setPublicRecipe(recipe);
+                    } else {
+                        setPublicViewError("Sorry, we couldn't find that recipe. The link may have expired or been removed.");
+                    }
+                })
+                .catch(err => {
+                    setPublicViewError("There was an error loading the recipe. Please try again later.");
+                })
+                .finally(() => {
+                    setIsPublicViewLoading(false);
+                });
+        } else {
+            setIsPublicViewLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChange((user) => {
@@ -180,7 +213,6 @@ const App: React.FC = () => {
         }
 
         try {
-            // Updated to pass userId to the refactored addRecipe function
             const docId = await addRecipe(user.uid, recipe);
             const newSavedRecipe = { ...recipe, id: docId };
             setSavedRecipes(prev => [...prev, newSavedRecipe]);
@@ -208,14 +240,42 @@ const App: React.FC = () => {
         }
     };
     
-    const handleDeleteRecipe = async (recipeId: string) => {
-        if (!user) return;
+    const handleDeleteRecipe = async (recipe: Recipe) => {
+        if (!user || !recipe.id) return;
         try {
-            await deleteRecipe(user.uid, recipeId);
-            setSavedRecipes(prev => prev.filter(r => r.id !== recipeId));
+            if (recipe.isPublic) {
+                await unshareRecipe(user.uid, recipe);
+            }
+            await deleteRecipe(user.uid, recipe.id);
+            setSavedRecipes(prev => prev.filter(r => r.id !== recipe.id));
             addToast({ message: 'Recipe removed from your cookbook.', type: 'success' });
         } catch (err) {
              addToast({ message: 'Failed to delete recipe.', type: 'error' });
+        }
+    };
+
+    const handleShareRecipe = async (recipe: Recipe): Promise<string> => {
+        if (!user) throw new Error("User not signed in.");
+        try {
+            const publicId = await shareRecipe(user.uid, user.displayName || 'A Chef', recipe);
+            setSavedRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, isPublic: true, publicId } : r));
+            addToast({ message: "Recipe is now public!", type: "success" });
+            return `${window.location.origin}?recipe=${publicId}`;
+        } catch (err) {
+            addToast({ message: 'Failed to share recipe.', type: 'error' });
+            throw err;
+        }
+    };
+
+    const handleUnshareRecipe = async (recipe: Recipe): Promise<void> => {
+        if (!user) throw new Error("User not signed in.");
+        try {
+            await unshareRecipe(user.uid, recipe);
+            setSavedRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, isPublic: false, publicId: undefined } : r));
+            addToast({ message: "Recipe is now private.", type: "success" });
+        } catch (err) {
+            addToast({ message: 'Failed to unshare recipe.', type: 'error' });
+            throw err;
         }
     };
 
@@ -380,7 +440,7 @@ const App: React.FC = () => {
                     </>
                 );
             case 'saved':
-                return <SavedRecipes user={user} recipes={savedRecipes} onDelete={handleDeleteRecipe} onStartCooking={handleStartCooking} />;
+                return <SavedRecipes user={user} recipes={savedRecipes} onDelete={handleDeleteRecipe} onShare={handleShareRecipe} onUnshare={handleUnshareRecipe} onStartCooking={handleStartCooking} />;
             case 'pantry':
                 return <Pantry items={pantryItems} onAddItem={handleAddPantryItem} onDeleteItem={handleDeletePantryItem} />;
             case 'shoppingList':
@@ -394,7 +454,7 @@ const App: React.FC = () => {
         }
     };
 
-    if (authLoading) {
+    if (isPublicViewLoading || authLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-[--background]">
                 <div className="text-center">
@@ -406,6 +466,16 @@ const App: React.FC = () => {
                 </div>
             </div>
         );
+    }
+
+    if (publicRecipe || publicViewError) {
+        return <PublicRecipeView 
+            recipe={publicRecipe} 
+            error={publicViewError} 
+            onSignIn={handleGoogleSignIn} 
+            isDarkMode={isDarkMode} 
+            toggleDarkMode={toggleDarkMode}
+        />
     }
 
     if (!user) {

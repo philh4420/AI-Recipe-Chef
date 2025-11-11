@@ -11,6 +11,10 @@ export interface Recipe {
   avgRating?: number;
   ratingCount?: number;
   reviews?: Review[];
+  isPublic?: boolean;
+  publicId?: string;
+  ownerId?: string;
+  ownerName?: string;
 }
 
 export interface InputFormProps {

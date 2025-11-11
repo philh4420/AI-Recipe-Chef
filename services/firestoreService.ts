@@ -8,9 +8,10 @@ const PANTRY_SUBCOLLECTION = "pantry";
 const SHOPPING_LIST_SUBCOLLECTION = "shoppingList";
 const MEAL_PLAN_DOC_ID = "---MEAL-PLAN---";
 const TASTE_PROFILE_DOC_ID = "---TASTE-PROFILE---";
+const PUBLIC_RECIPES_COLLECTION = "publicRecipes";
 
 
-// --- RECIPES (REVERTED TO PRIVATE MODEL) ---
+// --- RECIPES (PRIVATE MODEL) ---
 
 export const addRecipe = async (userId: string, recipe: Omit<Recipe, 'id'>): Promise<string> => {
     try {
@@ -19,6 +20,7 @@ export const addRecipe = async (userId: string, recipe: Omit<Recipe, 'id'>): Pro
             avgRating: 0,
             ratingCount: 0,
             reviews: [],
+            isPublic: false,
         };
         const docRef = await addDoc(collection(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION), fullRecipe);
         return docRef.id;
@@ -43,7 +45,6 @@ export const getRecipes = async (userId: string): Promise<Recipe[]> => {
 
 export const deleteRecipe = async (userId: string, recipeId: string): Promise<void> => {
     try {
-        // FIX: Corrected typo from USERS_COLlection to USERS_COLLECTION.
         const recipeDocRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, recipeId);
         await deleteDoc(recipeDocRef);
     } catch (e) {
@@ -88,6 +89,65 @@ export const addReview = async (userId: string, recipeId: string, reviewData: Om
     } catch (e) {
         console.error("Error adding review:", e);
         throw new Error("Could not submit review.");
+    }
+};
+
+// --- SHARING ---
+export const shareRecipe = async (userId: string, userName: string, recipe: Recipe): Promise<string> => {
+    if (recipe.isPublic && recipe.publicId) {
+        return recipe.publicId;
+    }
+    if (!recipe.id) {
+        throw new Error("Cannot share an unsaved recipe.");
+    }
+
+    const privateRecipeRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, recipe.id);
+    const publicRecipeRef = doc(collection(db, PUBLIC_RECIPES_COLLECTION));
+
+    const publicRecipeData = { ...recipe, ownerId: userId, ownerName: userName };
+    delete publicRecipeData.id; // The public doc will have its own ID
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            transaction.set(publicRecipeRef, publicRecipeData);
+            transaction.update(privateRecipeRef, { isPublic: true, publicId: publicRecipeRef.id });
+        });
+        return publicRecipeRef.id;
+    } catch (e) {
+        console.error("Error sharing recipe:", e);
+        throw new Error("Could not share recipe.");
+    }
+};
+
+export const unshareRecipe = async (userId: string, recipe: Recipe): Promise<void> => {
+    if (!recipe.isPublic || !recipe.publicId || !recipe.id) {
+        return;
+    }
+    const privateRecipeRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, recipe.id);
+    const publicRecipeRef = doc(db, PUBLIC_RECIPES_COLLECTION, recipe.publicId);
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            transaction.delete(publicRecipeRef);
+            transaction.update(privateRecipeRef, { isPublic: false, publicId: "" });
+        });
+    } catch (e) {
+        console.error("Error unsharing recipe:", e);
+        throw new Error("Could not unshare recipe.");
+    }
+};
+
+export const getPublicRecipe = async (publicId: string): Promise<Recipe | null> => {
+    try {
+        const publicRecipeRef = doc(db, PUBLIC_RECIPES_COLLECTION, publicId);
+        const docSnap = await getDoc(publicRecipeRef);
+        if (docSnap.exists()) {
+            return { ...docSnap.data(), publicId: docSnap.id, isPublic: true } as Recipe;
+        }
+        return null;
+    } catch (e) {
+        console.error("Error getting public recipe:", e);
+        throw new Error("Could not fetch the shared recipe.");
     }
 };
 
