@@ -20,6 +20,7 @@ export interface FormData {
     diet: string;
     cuisine: string;
     cookingMethod: string;
+    mealType: string;
 }
 
 export type FirebaseUser = User;

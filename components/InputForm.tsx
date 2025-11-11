@@ -4,6 +4,7 @@ import type { InputFormProps, FormData, PantryItem } from '../types';
 const DIETARY_OPTIONS = ["Any", "Atkins", "Dairy-Free", "DASH", "Diabetic", "Egg-Free", "Gluten-Free", "Halal", "Keto", "Kosher", "Low-Carb", "Low-Fat", "Low-FODMAP", "Low-Salt", "Nut-Free", "Paleo", "Pescatarian", "Raw Food", "Shellfish-Free", "Soy-Free", "Sugar-Free", "Vegan", "Vegetarian", "Whole30"];
 const CUISINE_OPTIONS = ["Any", "African", "American", "Argentinian", "Brazilian", "British", "Cajun & Creole", "Caribbean", "Chinese", "Cuban", "Eastern European", "Ethiopian", "Filipino", "French", "German", "Greek", "Indian", "Irish", "Italian", "Japanese", "Jewish", "Korean", "Latin American", "Lebanese", "Malaysian", "Mediterranean", "Mexican", "Middle Eastern", "Moroccan", "Nordic", "Pakistani", "Peruvian", "Polish", "Portuguese", "Russian", "Southern (US)", "Spanish", "Thai", "Turkish", "Vietnamese"];
 const COOKING_METHOD_OPTIONS = ["Any", "Air-Fry", "Bake", "Barbecue", "Blanch", "Boil", "Braise", "Broil", "Cure", "Deep-Fry", "Dehydrate", "Ferment", "Flambé", "Fry", "Grill", "Marinate", "Microwave", "Pan-Fry", "Pickle", "Poach", "Pressure-Cook", "Roast", "Sauté", "Sear", "Simmer", "Slow-Cook", "Smoke", "Sous-Vide", "Steam", "Stew", "Stir-Fry"];
+const MEAL_TYPE_OPTIONS = ["Any", "Breakfast", "Brunch", "Lunch", "Dinner", "Snack", "Dessert", "Appetizer"];
 
 const InputField: React.FC<{ icon: React.ReactNode; children: React.ReactNode }> = ({ icon, children }) => (
     <div className="relative">
@@ -24,7 +25,8 @@ export const InputForm: React.FC<ExtendedInputFormProps> = ({ isLoading, onSubmi
         ingredients: 'chicken, tomatoes, garlic',
         diet: '',
         cuisine: 'Italian',
-        cookingMethod: ''
+        cookingMethod: '',
+        mealType: '',
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -38,7 +40,7 @@ export const InputForm: React.FC<ExtendedInputFormProps> = ({ isLoading, onSubmi
     };
     
     const handleSurprise = () => {
-      const emptyForm: FormData = { ingredients: '', diet: '', cuisine: '', cookingMethod: '' };
+      const emptyForm: FormData = { ingredients: '', diet: '', cuisine: '', cookingMethod: '', mealType: '' };
       setFormData(emptyForm);
       onSubmit(emptyForm);
     }
@@ -84,7 +86,15 @@ export const InputForm: React.FC<ExtendedInputFormProps> = ({ isLoading, onSubmi
                     </InputField>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <label htmlFor="mealType" className="block text-sm font-medium text-[--foreground] mb-2">Meal Type</label>
+                        <InputField icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[--muted-foreground]" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM5 10a5 5 0 015-5v10a5 5 0 01-5-5z" /></svg>}>
+                            <select id="mealType" value={formData.mealType} onChange={handleChange} className={selectClasses}>
+                                {MEAL_TYPE_OPTIONS.map(option => <option key={option} value={option === "Any" ? "" : option}>{option}</option>)}
+                            </select>
+                        </InputField>
+                    </div>
                     <div>
                         <label htmlFor="diet" className="block text-sm font-medium text-[--foreground] mb-2">Dietary Preference</label>
                         <InputField icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[--muted-foreground]" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM6.343 6.343a.5.5 0 01.707 0L10 9.293l2.95-2.95a.5.5 0 01.707.707L10.707 10l2.95 2.95a.5.5 0 01-.707.707L10 10.707l-2.95 2.95a.5.5 0 01-.707-.707L9.293 10 6.343 7.05a.5.5 0 010-.707z" /></svg>}>

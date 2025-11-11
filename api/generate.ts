@@ -1,4 +1,5 @@
 
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -8,6 +9,7 @@ interface FormData {
     diet: string;
     cuisine: string;
     cookingMethod: string;
+    mealType: string;
 }
 
 const recipeSchema = {
@@ -65,11 +67,12 @@ export default async function handler(
   
   const ai = new GoogleGenAI({ apiKey: API_KEY });
   const formData: FormData = request.body;
-  const { ingredients, diet, cuisine, cookingMethod } = formData;
+  const { ingredients, diet, cuisine, cookingMethod, mealType } = formData;
     
   // Optimized prompt: More direct and relies on the schema for formatting.
   const prompt = `Generate 3 recipes based on the following criteria:
     - Main Ingredients: ${ingredients || 'any'}
+    - Meal Type: ${mealType || 'any'}
     - Diet: ${diet || 'any'}
     - Cuisine: ${cuisine || 'any'}
     - Cooking Style: ${cookingMethod || 'any'}`;
