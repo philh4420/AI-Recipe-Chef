@@ -1,4 +1,3 @@
-// FIX: Removed modular imports and updated all Firestore calls to use the v8/compat syntax.
 import { db } from "../firebase";
 import type { Recipe, PantryItem, ShoppingListItem, MealPlan, TasteProfile, Review } from "../types";
 
@@ -54,8 +53,16 @@ export const deleteRecipe = async (userId: string, recipeId: string): Promise<vo
 
 // --- REVIEWS (EMBEDDED MODEL) ---
 
-export const addReview = async (userId: string, recipeId: string, reviewData: Omit<Review, 'id' | 'createdAt'>): Promise<void> => {
+export const addReview = async (userId: string, recipeId: string, reviewData: Omit<Review, 'id' | 'createdAt'>): Promise<Review> => {
     const recipeRef = db.collection(USERS_COLLECTION).doc(userId).collection(RECIPES_SUBCOLLECTION).doc(recipeId);
+    
+    // Create the full review object on the client-side first
+    const newReview: Review = {
+        ...reviewData,
+        id: db.collection('dummy').doc().id, // Generate a unique client-side ID for the review
+        createdAt: new Date().toISOString(), // Use ISO string for simplicity and JSON compatibility
+    };
+
     try {
         await db.runTransaction(async (transaction) => {
             const recipeDoc = await transaction.get(recipeRef);
@@ -68,12 +75,6 @@ export const addReview = async (userId: string, recipeId: string, reviewData: Om
             const currentRatingCount = recipe.ratingCount || 0;
             const currentAvgRating = recipe.avgRating || 0;
 
-            const newReview: Review = {
-                ...reviewData,
-                id: db.collection('dummy').doc().id, // Generate a unique client-side ID for the review
-                createdAt: new Date().toISOString(), // Use ISO string for simplicity and JSON compatibility
-            };
-
             const newReviews = [newReview, ...currentReviews];
             const newRatingCount = currentRatingCount + 1;
             const newTotalRating = (currentAvgRating * currentRatingCount) + newReview.rating;
@@ -85,6 +86,10 @@ export const addReview = async (userId: string, recipeId: string, reviewData: Om
                 avgRating: newAvgRating,
             });
         });
+        
+        // Return the successfully created review object
+        return newReview;
+
     } catch (e) {
         console.error("Error adding review:", e);
         throw new Error("Could not submit review.");

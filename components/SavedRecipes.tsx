@@ -122,7 +122,6 @@ export const SavedRecipes: React.FC<SavedRecipesProps> = ({ recipes, onDelete, o
                                 recipe={recipe} 
                                 onDelete={onDelete}
                                 onShare={onShare}
-                                isSavedView={true}
                                 onStartCooking={onStartCooking}
                                 onRecipeUpdate={onRecipeUpdate}
                             />

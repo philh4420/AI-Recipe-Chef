@@ -9,7 +9,7 @@ interface ReviewsProps {
     recipeId: string;
     user: FirebaseUser;
     reviews: Review[];
-    onReviewAdded: (review: Omit<Review, 'id' | 'createdAt'>) => void;
+    onReviewAdded: (review: Review) => void;
 }
 
 const PhotoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -55,7 +55,7 @@ export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, reviews, onRev
                 imageUrl = await uploadReviewImage(imageFile, user.uid, recipeId);
             }
 
-            const newReviewData = {
+            const reviewData = {
                 recipeId,
                 userId: user.uid,
                 userName: user.displayName || 'Anonymous',
@@ -65,10 +65,10 @@ export const Reviews: React.FC<ReviewsProps> = ({ recipeId, user, reviews, onRev
                 imageUrl,
             };
 
-            await addReview(user.uid, recipeId, newReviewData);
+            const createdReview = await addReview(user.uid, recipeId, reviewData);
             
-            // Clear form and call parent for optimistic update
-            onReviewAdded(newReviewData);
+            // Clear form and call parent with the REAL review object from the DB
+            onReviewAdded(createdReview);
             setRating(0);
             setComment('');
             setImageFile(null);

@@ -94,7 +94,6 @@ interface RecipeCardProps {
     onDelete?: (recipe: Recipe) => Promise<void>;
     onShare?: (recipe: Recipe) => string;
     isSaved?: boolean;
-    isSavedView?: boolean;
     isPublicView?: boolean;
     isDemo?: boolean;
     onModify?: (recipe: Recipe, modification: string) => void;
@@ -102,7 +101,7 @@ interface RecipeCardProps {
     onRecipeUpdate?: (updatedRecipe: Recipe) => void;
 }
 
-export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, onDelete, onShare, isSaved, isSavedView, isPublicView, isDemo, onModify, onStartCooking, onRecipeUpdate }) => {
+export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, onDelete, onShare, isSaved, isPublicView, isDemo, onModify, onStartCooking, onRecipeUpdate }) => {
     const [isSaving, setIsSaving] = useState(false);
     const [justSaved, setJustSaved] = useState(false);
     const [showReviews, setShowReviews] = useState(false);
@@ -174,21 +173,17 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, on
         if (onStartCooking) onStartCooking(currentRecipe);
     };
 
-    const handleReviewAdded = (newReview: Omit<Review, 'id' | 'createdAt'>) => {
+    const handleReviewAdded = (newReview: Review) => {
         const oldRecipe = currentRecipe;
         const oldTotalRating = (oldRecipe.avgRating || 0) * (oldRecipe.ratingCount || 0);
         const newRatingCount = (oldRecipe.ratingCount || 0) + 1;
         const newAvgRating = (oldTotalRating + newReview.rating) / newRatingCount;
-        const newReviews = [
-            { ...newReview, id: `temp-${Date.now()}`, createdAt: new Date().toISOString() }, 
-            ...(oldRecipe.reviews || [])
-        ];
 
         const updatedRecipe: Recipe = {
             ...oldRecipe,
             ratingCount: newRatingCount,
             avgRating: newAvgRating,
-            reviews: newReviews,
+            reviews: [newReview, ...(oldRecipe.reviews || [])],
         };
 
         // Optimistically update the local UI for instant feedback
@@ -214,10 +209,10 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, on
                     onClick={() => setShowReviews(!showReviews)}
                     className="flex items-center gap-2 mb-4 text-sm group"
                     aria-expanded={showReviews}
-                    disabled={!isSavedView}
+                    disabled={!onDelete}
                 >
                     <StarRating rating={currentRecipe.avgRating || 0} />
-                    <span className={`text-[--muted-foreground] ${isSavedView ? 'group-hover:text-[--primary]' : ''} transition-colors`}>
+                    <span className={`text-[--muted-foreground] ${!!onDelete ? 'group-hover:text-[--primary]' : ''} transition-colors`}>
                         ({currentRecipe.ratingCount || 0} reviews)
                     </span>
                 </button>
@@ -316,7 +311,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, on
                 </div>
             </div>
 
-            {onModify && !isSavedView && !isDemo && (
+            {onModify && !onDelete && !isDemo && (
                  <div className="px-8 pb-6 pt-2 no-print">
                     <h4 className="text-sm font-semibold text-[--muted-foreground] mb-3">Want a change?</h4>
                     <div className="flex flex-wrap gap-2">
@@ -327,7 +322,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, on
                 </div>
             )}
             
-            {showReviews && user && currentRecipe.id && isSavedView && (
+            {showReviews && user && currentRecipe.id && onDelete && (
                 <div className="bg-[--muted]/20 p-8 border-y border-[--border] no-print">
                      <Reviews 
                         user={user} 
@@ -348,7 +343,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ user, recipe, onSave, on
                         </button>
                      )}
                      <div className="hidden sm:block border-l border-[--border] h-6 mx-2"></div>
-                    {isSavedView && onDelete && onShare ? (
+                    {onDelete && onShare ? (
                         <>
                         <button onClick={handleShare} className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-semibold text-[--muted-foreground] bg-transparent hover:bg-[--muted] hover:text-[--foreground] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--ring] focus:ring-offset-[--card] transition-colors">
                             <ShareIcon className="h-4 w-4" aria-hidden="true" />
