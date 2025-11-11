@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { FirebaseUser } from '../types';
 
+type View = 'generator' | 'saved' | 'pantry' | 'shoppingList';
+
 interface HeaderProps {
     user: FirebaseUser | null;
     onSignOut: () => Promise<void>;
     isDarkMode: boolean;
     toggleDarkMode: () => void;
-    view: 'generator' | 'saved';
-    setView: (view: 'generator' | 'saved') => void;
+    view: View;
+    setView: (view: View) => void;
 }
 
 const SunIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -55,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({ user, onSignOut, isDarkMode, tog
     }, []);
 
     const NavButton: React.FC<{
-        targetView: 'generator' | 'saved',
+        targetView: View,
         children: React.ReactNode,
         isMobile?: boolean
     }> = ({ targetView, children, isMobile }) => {
@@ -82,9 +84,11 @@ export const Header: React.FC<HeaderProps> = ({ user, onSignOut, isDarkMode, tog
                     </div>
                     
                     {/* Center Navigation (Desktop) */}
-                    <nav className="hidden md:flex items-center gap-2 bg-[--input] p-1 rounded-lg border border-[--border]">
+                    <nav className="hidden md:flex items-center gap-1 bg-[--input] p-1 rounded-lg border border-[--border]">
                         <NavButton targetView="generator">Generator</NavButton>
                         <NavButton targetView="saved">Saved Recipes</NavButton>
+                        <NavButton targetView="pantry">Pantry</NavButton>
+                        <NavButton targetView="shoppingList">Shopping List</NavButton>
                     </nav>
 
                     {/* Right side */}
@@ -151,6 +155,8 @@ export const Header: React.FC<HeaderProps> = ({ user, onSignOut, isDarkMode, tog
                  <nav className="flex flex-col gap-2">
                     <NavButton targetView="generator" isMobile>Generator</NavButton>
                     <NavButton targetView="saved" isMobile>Saved Recipes</NavButton>
+                    <NavButton targetView="pantry" isMobile>Pantry</NavButton>
+                    <NavButton targetView="shoppingList" isMobile>Shopping List</NavButton>
                     <div className="border-b border-[--border] my-2"></div>
                      <button onClick={onSignOut} className="w-full text-left px-4 py-2 text-base text-[--destructive] hover:bg-[--destructive]/10 rounded-md">
                         Sign Out

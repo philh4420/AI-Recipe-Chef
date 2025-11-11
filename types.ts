@@ -35,3 +35,15 @@ export interface Toast {
   message: string;
   type: 'success' | 'error';
 }
+
+export interface PantryItem {
+  id: string;
+  name: string;
+}
+
+export interface ShoppingListItem {
+  id: string;
+  name: string;
+  recipeName: string;
+  isChecked: boolean;
+}

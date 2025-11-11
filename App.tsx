@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { generateRecipes, modifyRecipe } from './services/geminiService';
-import { addRecipe, deleteRecipe, getRecipes } from './services/firestoreService';
+import { 
+    addRecipe, deleteRecipe, getRecipes,
+    getPantryItems, addPantryItem, deletePantryItem,
+    getShoppingListItems, addShoppingListItems, updateShoppingListItem, deleteShoppingListItems
+} from './services/firestoreService';
 import { onAuthStateChange, signInWithGoogle, signOutUser } from './services/authService';
-import type { Recipe, FormData, FirebaseUser } from './types';
+import type { Recipe, FormData, FirebaseUser, PantryItem, ShoppingListItem } from './types';
 import { InputForm } from './components/InputForm';
 import { Header } from './components/Header';
 import { RecipeList } from './components/RecipeList';
 import { SavedRecipes } from './components/SavedRecipes';
+import { Pantry } from './components/Pantry';
+import { ShoppingList } from './components/ShoppingList';
 import { LandingPage } from './components/LandingPage';
 import { Footer } from './components/Footer';
 import { CookingMode } from './components/CookingMode';
@@ -17,10 +23,12 @@ const App: React.FC = () => {
     const [authLoading, setAuthLoading] = useState<boolean>(true);
     const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+    const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
+    const [shoppingListItems, setShoppingListItems] = useState<ShoppingListItem[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [modifyingRecipeIndex, setModifyingRecipeIndex] = useState<number | null>(null);
     const [error, setError] = useState<React.ReactNode | null>(null);
-    const [view, setView] = useState<'generator' | 'saved'>('generator');
+    const [view, setView] = useState<'generator' | 'saved' | 'pantry' | 'shoppingList'>('generator');
     const [lastFormData, setLastFormData] = useState<FormData | null>(null);
     const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
 
@@ -43,9 +51,11 @@ const App: React.FC = () => {
 
     useEffect(() => {
         if (user) {
-            fetchSavedRecipes();
+            fetchUserData();
         } else {
             setSavedRecipes([]);
+            setPantryItems([]);
+            setShoppingListItems([]);
         }
     }, [user]);
     
@@ -62,15 +72,31 @@ const App: React.FC = () => {
 
     const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
-    const fetchSavedRecipes = async () => {
-        if (user) {
-            try {
-                const recipes = await getRecipes(user.uid);
-                setSavedRecipes(recipes);
-            } catch (err) {
-                addToast({ message: 'Failed to fetch saved recipes.', type: 'error' });
-            }
-        }
+    const fetchUserData = () => {
+        if (!user) return;
+
+        // Fetch data concurrently, but handle errors individually
+        // so that one failed request doesn't block others.
+        getRecipes(user.uid)
+            .then(setSavedRecipes)
+            .catch(err => {
+                console.error("Failed to fetch recipes:", err);
+                addToast({ message: 'Could not load your saved recipes.', type: 'error' });
+            });
+            
+        getPantryItems(user.uid)
+            .then(setPantryItems)
+            .catch(err => {
+                console.error("Failed to fetch pantry items:", err);
+                addToast({ message: 'Could not load your pantry.', type: 'error' });
+            });
+            
+        getShoppingListItems(user.uid)
+            .then(setShoppingListItems)
+            .catch(err => {
+                console.error("Failed to fetch shopping list items:", err);
+                addToast({ message: 'Could not load your shopping list.', type: 'error' });
+            });
     };
     
     const handleRetry = () => {
@@ -91,7 +117,6 @@ const App: React.FC = () => {
         } catch (err: any) {
             console.error(err);
             const errorMessage = err.message || "An unknown error occurred.";
-            // Create a more user-friendly error message.
             const friendlyMessage = (
               <>
                 <strong>Generation Failed:</strong> {errorMessage}
@@ -142,9 +167,29 @@ const App: React.FC = () => {
             const docId = await addRecipe(user.uid, recipe);
             const newSavedRecipe = { ...recipe, id: docId };
             setSavedRecipes(prev => [...prev, newSavedRecipe]);
-            addToast({ message: 'Recipe saved to your cookbook!', type: 'success' });
+            
+            // Generate shopping list
+            const pantryNames = pantryItems.map(item => item.name.toLowerCase().trim());
+            const missingIngredients = recipe.ingredients
+              .map(ing => ({ original: ing, clean: ing.split(',')[0].toLowerCase().trim() }))
+              .filter(ingObj => !pantryNames.includes(ingObj.clean))
+              .map(ingObj => ({
+                  name: ingObj.original,
+                  recipeName: recipe.recipeName,
+                  isChecked: false,
+              }));
+
+            if (missingIngredients.length > 0) {
+                await addShoppingListItems(user.uid, missingIngredients);
+                // After adding, we should refetch to get correct IDs from firestore
+                getShoppingListItems(user.uid).then(setShoppingListItems);
+                addToast({ message: 'Recipe saved! Missing ingredients added to your shopping list.', type: 'success' });
+            } else {
+                addToast({ message: 'Recipe saved! You have all the ingredients.', type: 'success' });
+            }
+
         } catch (err) {
-            addToast({ message: 'Failed to save recipe.', type: 'error' });
+            addToast({ message: 'Failed to save recipe and generate shopping list.', type: 'error' });
         }
     };
     
@@ -159,8 +204,56 @@ const App: React.FC = () => {
         }
     };
 
-    const handleClear = () => setGeneratedRecipes([]);
+    const handleAddPantryItem = async (itemName: string) => {
+        if (!user || !itemName.trim()) return;
+        if (pantryItems.some(item => item.name.toLowerCase() === itemName.toLowerCase().trim())) {
+            addToast({ message: `${itemName} is already in your pantry.`, type: 'error' });
+            return;
+        }
+        try {
+            const newItem = await addPantryItem(user.uid, itemName.trim());
+            setPantryItems(prev => [...prev, newItem]);
+        } catch (err) {
+            addToast({ message: 'Failed to add item to pantry.', type: 'error' });
+        }
+    };
 
+    const handleDeletePantryItem = async (itemId: string) => {
+        if (!user) return;
+        try {
+            await deletePantryItem(user.uid, itemId);
+            setPantryItems(prev => prev.filter(item => item.id !== itemId));
+        } catch (err) {
+            addToast({ message: 'Failed to remove item from pantry.', type: 'error' });
+        }
+    };
+
+    const handleToggleShoppingListItem = async (itemId: string, isChecked: boolean) => {
+        if (!user) return;
+        try {
+            await updateShoppingListItem(user.uid, itemId, isChecked);
+            setShoppingListItems(prev => prev.map(item => item.id === itemId ? { ...item, isChecked } : item));
+        } catch (err) {
+            addToast({ message: 'Failed to update shopping list.', type: 'error' });
+        }
+    };
+    
+    const handleClearShoppingList = async (checkedOnly: boolean) => {
+        if (!user) return;
+        const itemsToDelete = checkedOnly ? shoppingListItems.filter(item => item.isChecked) : shoppingListItems;
+        const itemIdsToDelete = itemsToDelete.map(item => item.id);
+        if (itemIdsToDelete.length === 0) return;
+
+        try {
+            await deleteShoppingListItems(user.uid, itemIdsToDelete);
+            setShoppingListItems(prev => prev.filter(item => !itemIdsToDelete.includes(item.id)));
+            addToast({ message: 'Shopping list cleared.', type: 'success' });
+        } catch (err) {
+            addToast({ message: 'Failed to clear shopping list.', type: 'error' });
+        }
+    };
+
+    const handleClear = () => setGeneratedRecipes([]);
     const handleStartCooking = (recipe: Recipe) => setCookingRecipe(recipe);
     const handleCloseCookingMode = () => setCookingRecipe(null);
     
@@ -178,6 +271,60 @@ const App: React.FC = () => {
             setView('generator');
         } catch (error) {
             addToast({ message: 'Failed to sign out.', type: 'error' });
+        }
+    };
+
+    const renderContent = () => {
+        switch(view) {
+            case 'generator':
+                return (
+                    <>
+                        <InputForm 
+                            isLoading={isLoading || modifyingRecipeIndex !== null} 
+                            onSubmit={handleSubmit} 
+                            onSurprise={handleSubmit} 
+                            pantryItems={pantryItems}
+                        />
+                        <RecipeList
+                            recipes={generatedRecipes}
+                            isLoading={isLoading}
+                            error={error}
+                            onClear={handleClear}
+                            onSave={handleSaveRecipe}
+                            savedRecipeIds={savedRecipes.map(r => r.recipeName)}
+                            onRetry={handleRetry}
+                            onModify={handleModifyRecipe}
+                            modifyingRecipeIndex={modifyingRecipeIndex}
+                            onStartCooking={handleStartCooking}
+                        />
+                    </>
+                );
+            case 'saved':
+                return (
+                    <SavedRecipes 
+                        recipes={savedRecipes}
+                        onDelete={handleDeleteRecipe}
+                        onStartCooking={handleStartCooking}
+                    />
+                );
+            case 'pantry':
+                return (
+                    <Pantry
+                        items={pantryItems}
+                        onAddItem={handleAddPantryItem}
+                        onDeleteItem={handleDeletePantryItem}
+                    />
+                );
+            case 'shoppingList':
+                 return (
+                    <ShoppingList
+                        items={shoppingListItems}
+                        onToggleItem={handleToggleShoppingListItem}
+                        onClearList={handleClearShoppingList}
+                    />
+                );
+            default:
+                return null;
         }
     };
 
@@ -214,29 +361,7 @@ const App: React.FC = () => {
                 setView={setView}
             />
             <main className="container mx-auto p-4 md:p-8 flex-grow">
-                 {view === 'generator' ? (
-                    <>
-                        <InputForm isLoading={isLoading || modifyingRecipeIndex !== null} onSubmit={handleSubmit} onSurprise={handleSubmit} />
-                        <RecipeList
-                            recipes={generatedRecipes}
-                            isLoading={isLoading}
-                            error={error}
-                            onClear={handleClear}
-                            onSave={handleSaveRecipe}
-                            savedRecipeIds={savedRecipes.map(r => r.recipeName)}
-                            onRetry={handleRetry}
-                            onModify={handleModifyRecipe}
-                            modifyingRecipeIndex={modifyingRecipeIndex}
-                            onStartCooking={handleStartCooking}
-                        />
-                    </>
-                ) : (
-                    <SavedRecipes 
-                        recipes={savedRecipes}
-                        onDelete={handleDeleteRecipe}
-                        onStartCooking={handleStartCooking}
-                    />
-                )}
+                 {renderContent()}
             </main>
             <Footer />
             {cookingRecipe && (

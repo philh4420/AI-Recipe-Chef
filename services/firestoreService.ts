@@ -1,46 +1,133 @@
-import { collection, addDoc, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, deleteDoc, writeBatch, query, where, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import type { Recipe } from "../types";
+import type { Recipe, PantryItem, ShoppingListItem } from "../types";
 
 const USERS_COLLECTION = "users";
 const RECIPES_SUBCOLLECTION = "recipes";
+const PANTRY_SUBCOLLECTION = "pantry";
+const SHOPPING_LIST_SUBCOLLECTION = "shoppingList";
 
-// Add a new document to a user's specific subcollection.
+// --- RECIPES ---
+
 export const addRecipe = async (userId: string, recipe: Omit<Recipe, 'id'>): Promise<string> => {
     try {
         const userRecipesCollection = collection(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION);
         const docRef = await addDoc(userRecipesCollection, recipe);
-        console.log("Document written with ID: ", docRef.id);
         return docRef.id;
     } catch (e) {
-        console.error("Error adding document: ", e);
+        console.error("Error adding recipe: ", e);
         throw new Error("Could not save recipe.");
     }
 };
 
-// Get all documents from a user's specific subcollection
 export const getRecipes = async (userId: string): Promise<Recipe[]> => {
     try {
         const userRecipesCollection = collection(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION);
         const querySnapshot = await getDocs(userRecipesCollection);
-        const recipes: Recipe[] = [];
-        querySnapshot.forEach((doc) => {
-            recipes.push({ id: doc.id, ...doc.data() } as Recipe);
-        });
-        return recipes;
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
     } catch (e) {
-        console.error("Error getting documents: ", e);
+        console.error("Error getting recipes: ", e);
         throw new Error("Could not fetch recipes.");
     }
 }
 
-// Delete a document from a user's specific subcollection
 export const deleteRecipe = async (userId: string, recipeId: string): Promise<void> => {
     try {
         const recipeDocRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, recipeId);
         await deleteDoc(recipeDocRef);
     } catch (e) {
-        console.error("Error deleting document: ", e);
+        console.error("Error deleting recipe: ", e);
         throw new Error("Could not delete recipe.");
     }
 }
+
+
+// --- PANTRY ---
+
+export const getPantryItems = async (userId: string): Promise<PantryItem[]> => {
+    try {
+        const pantryCollection = collection(db, USERS_COLLECTION, userId, PANTRY_SUBCOLLECTION);
+        const querySnapshot = await getDocs(pantryCollection);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+    } catch (e) {
+        console.error("Error getting pantry items: ", e);
+        throw new Error("Could not fetch pantry items.");
+    }
+};
+
+export const addPantryItem = async (userId: string, itemName: string): Promise<PantryItem> => {
+    try {
+        const pantryCollection = collection(db, USERS_COLLECTION, userId, PANTRY_SUBCOLLECTION);
+        const docRef = await addDoc(pantryCollection, { name: itemName });
+        return { id: docRef.id, name: itemName };
+    } catch (e) {
+        console.error("Error adding pantry item: ", e);
+        throw new Error("Could not add pantry item.");
+    }
+};
+
+export const deletePantryItem = async (userId: string, itemId: string): Promise<void> => {
+    try {
+        const itemDocRef = doc(db, USERS_COLLECTION, userId, PANTRY_SUBCOLLECTION, itemId);
+        await deleteDoc(itemDocRef);
+    } catch (e) {
+        console.error("Error deleting pantry item: ", e);
+        throw new Error("Could not delete pantry item.");
+    }
+};
+
+
+// --- SHOPPING LIST ---
+
+export const getShoppingListItems = async (userId: string): Promise<ShoppingListItem[]> => {
+    try {
+        const shoppingListCollection = collection(db, USERS_COLLECTION, userId, SHOPPING_LIST_SUBCOLLECTION);
+        const querySnapshot = await getDocs(shoppingListCollection);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ShoppingListItem));
+    } catch (e) {
+        console.error("Error getting shopping list items: ", e);
+        throw new Error("Could not fetch shopping list.");
+    }
+};
+
+export const addShoppingListItems = async (userId: string, items: Omit<ShoppingListItem, 'id'>[]): Promise<void> => {
+    if (items.length === 0) return;
+    try {
+        const shoppingListCollection = collection(db, USERS_COLLECTION, userId, SHOPPING_LIST_SUBCOLLECTION);
+        const batch = writeBatch(db);
+        items.forEach(item => {
+            const docRef = doc(shoppingListCollection); // Create a new doc with a random ID
+            batch.set(docRef, item);
+        });
+        await batch.commit();
+    } catch (e) {
+        console.error("Error adding shopping list items: ", e);
+        throw new Error("Could not add items to shopping list.");
+    }
+};
+
+export const updateShoppingListItem = async (userId: string, itemId: string, isChecked: boolean): Promise<void> => {
+    try {
+        const itemDocRef = doc(db, USERS_COLLECTION, userId, SHOPPING_LIST_SUBCOLLECTION, itemId);
+        await updateDoc(itemDocRef, { isChecked });
+    } catch (e) {
+        console.error("Error updating shopping list item: ", e);
+        throw new Error("Could not update shopping list item.");
+    }
+};
+
+export const deleteShoppingListItems = async (userId: string, itemIds: string[]): Promise<void> => {
+     if (itemIds.length === 0) return;
+    try {
+        const shoppingListCollection = collection(db, USERS_COLLECTION, userId, SHOPPING_LIST_SUBCOLLECTION);
+        const batch = writeBatch(db);
+        itemIds.forEach(id => {
+            const docRef = doc(shoppingListCollection, id);
+            batch.delete(docRef);
+        });
+        await batch.commit();
+    } catch (e) {
+        console.error("Error deleting shopping list items: ", e);
+        throw new Error("Could not delete items from shopping list.");
+    }
+};

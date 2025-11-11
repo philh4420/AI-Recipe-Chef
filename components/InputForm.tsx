@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { InputFormProps, FormData } from '../types';
+import type { InputFormProps, FormData, PantryItem } from '../types';
 
 const DIETARY_OPTIONS = ["Any", "Atkins", "Dairy-Free", "DASH", "Diabetic", "Egg-Free", "Gluten-Free", "Halal", "Keto", "Kosher", "Low-Carb", "Low-Fat", "Low-FODMAP", "Low-Salt", "Nut-Free", "Paleo", "Pescatarian", "Raw Food", "Shellfish-Free", "Soy-Free", "Sugar-Free", "Vegan", "Vegetarian", "Whole30"];
 const CUISINE_OPTIONS = ["Any", "African", "American", "Argentinian", "Brazilian", "British", "Cajun & Creole", "Caribbean", "Chinese", "Cuban", "Eastern European", "Ethiopian", "Filipino", "French", "German", "Greek", "Indian", "Irish", "Italian", "Japanese", "Jewish", "Korean", "Latin American", "Lebanese", "Malaysian", "Mediterranean", "Mexican", "Middle Eastern", "Moroccan", "Nordic", "Pakistani", "Peruvian", "Polish", "Portuguese", "Russian", "Southern (US)", "Spanish", "Thai", "Turkish", "Vietnamese"];
@@ -14,7 +14,12 @@ const InputField: React.FC<{ icon: React.ReactNode; children: React.ReactNode }>
     </div>
 );
 
-export const InputForm: React.FC<InputFormProps & { onSurprise: () => void }> = ({ isLoading, onSubmit, onSurprise }) => {
+interface ExtendedInputFormProps extends InputFormProps {
+    onSurprise: () => void;
+    pantryItems: PantryItem[];
+}
+
+export const InputForm: React.FC<ExtendedInputFormProps> = ({ isLoading, onSubmit, onSurprise, pantryItems }) => {
     const [formData, setFormData] = useState<FormData>({
         ingredients: 'chicken, tomatoes, garlic',
         diet: '',
@@ -37,6 +42,11 @@ export const InputForm: React.FC<InputFormProps & { onSurprise: () => void }> = 
       setFormData(emptyForm);
       onSubmit(emptyForm);
     }
+    
+    const handleUsePantry = () => {
+        const pantryIngredients = pantryItems.map(item => item.name).join(', ');
+        setFormData(prev => ({ ...prev, ingredients: pantryIngredients }));
+    };
 
     const inputBaseClasses = "block w-full border border-[--border] bg-[--input] rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-[--ring] focus:border-[--primary] sm:text-sm text-[--foreground] transition-colors";
     const selectClasses = `${inputBaseClasses} pl-10`;
@@ -50,7 +60,18 @@ export const InputForm: React.FC<InputFormProps & { onSurprise: () => void }> = 
             
             <div className="space-y-6">
                 <div>
-                    <label htmlFor="ingredients" className="block text-sm font-medium text-[--foreground] mb-2">Ingredients</label>
+                    <div className="flex justify-between items-center mb-2">
+                        <label htmlFor="ingredients" className="block text-sm font-medium text-[--foreground]">Ingredients</label>
+                        {pantryItems.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={handleUsePantry}
+                                className="text-xs font-semibold text-[--primary] hover:underline"
+                            >
+                                Use Pantry Ingredients
+                            </button>
+                        )}
+                    </div>
                     <InputField icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[--muted-foreground]" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 4h3a1 1 0 110 2H4a1 1 0 110-2zm12 0h-3a1 1 0 100 2h3a1 1 0 100-2zM4 8h6a1 1 0 110 2H4a1 1 0 110-2zm12 0h-6a1 1 0 100 2h6a1 1 0 100-2zM4 12h3a1 1 0 110 2H4a1 1 0 110-2zm12 0h-3a1 1 0 100 2h3a1 1 0 100-2zM10 15a1 1 0 011-1h3a1 1 0 110 2h-3a1 1 0 01-1-1zM4 15a1 1 0 011-1h3a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" /></svg>}>
                         <input
                             type="text"
