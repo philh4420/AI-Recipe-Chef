@@ -134,15 +134,14 @@ export const deleteShoppingListItems = async (userId: string, itemIds: string[])
 
 // --- MEAL PLAN ---
 
-const MEAL_PLAN_SUBCOLLECTION = "mealPlan";
-const WEEKLY_PLAN_DOC = "weeklyPlan";
-
 export const getMealPlan = async (userId: string): Promise<MealPlan> => {
     try {
-        const mealPlanDocRef = doc(db, USERS_COLLECTION, userId, MEAL_PLAN_SUBCOLLECTION, WEEKLY_PLAN_DOC);
-        const docSnap = await getDoc(mealPlanDocRef);
-        if (docSnap.exists()) {
-            return docSnap.data() as MealPlan;
+        // Fetch the meal plan from a field on the user document itself.
+        // This avoids needing separate Firestore permissions for a subcollection.
+        const userDocRef = doc(db, USERS_COLLECTION, userId);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists() && docSnap.data().mealPlan) {
+            return docSnap.data().mealPlan as MealPlan;
         }
         return {}; // Return empty object if no plan exists yet
     } catch (e) {
@@ -153,8 +152,10 @@ export const getMealPlan = async (userId: string): Promise<MealPlan> => {
 
 export const updateMealPlan = async (userId: string, mealPlan: MealPlan): Promise<void> => {
     try {
-        const mealPlanDocRef = doc(db, USERS_COLLECTION, userId, MEAL_PLAN_SUBCOLLECTION, WEEKLY_PLAN_DOC);
-        await setDoc(mealPlanDocRef, mealPlan); // Overwrite the whole document
+        // Update the mealPlan field on the user document.
+        const userDocRef = doc(db, USERS_COLLECTION, userId);
+        // Using set with merge:true adds/updates the mealPlan field without overwriting other user data.
+        await setDoc(userDocRef, { mealPlan }, { merge: true });
     } catch (e) {
         console.error("Error updating meal plan: ", e);
         throw new Error("Could not update meal plan.");

@@ -17,16 +17,18 @@ const ShoppingCartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 export const ShoppingList: React.FC<ShoppingListProps> = ({ items, onToggleItem, onClearList }) => {
 
     const groupedItems = useMemo(() => {
-        // Fix: By providing a generic to `reduce`, we ensure the accumulator `acc`
-        // and the return value are correctly typed, which fixes the downstream error.
-        return items.reduce<Record<string, ShoppingListItem[]>>((acc, item) => {
+        // Fix: Replaced the `reduce` method with a `for...of` loop to group items.
+        // This resolves TypeScript errors related to generic type arguments on untyped functions
+        // and ensures correct type inference for `groupedItems`.
+        const groups: Record<string, ShoppingListItem[]> = {};
+        for (const item of items) {
             const { recipeName } = item;
-            if (!acc[recipeName]) {
-                acc[recipeName] = [];
+            if (!groups[recipeName]) {
+                groups[recipeName] = [];
             }
-            acc[recipeName].push(item);
-            return acc;
-        }, {});
+            groups[recipeName].push(item);
+        }
+        return groups;
     }, [items]);
     
     const checkedItemsCount = useMemo(() => items.filter(item => item.isChecked).length, [items]);
