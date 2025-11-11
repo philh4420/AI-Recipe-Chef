@@ -6,6 +6,7 @@ const USERS_COLLECTION = "users";
 const RECIPES_SUBCOLLECTION = "recipes";
 const PANTRY_SUBCOLLECTION = "pantry";
 const SHOPPING_LIST_SUBCOLLECTION = "shoppingList";
+const MEAL_PLAN_DOC_ID = "---MEAL-PLAN---"; // Special ID to store the meal plan within the recipes collection to reuse permissions
 
 // --- RECIPES ---
 
@@ -24,7 +25,9 @@ export const getRecipes = async (userId: string): Promise<Recipe[]> => {
     try {
         const userRecipesCollection = collection(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION);
         const querySnapshot = await getDocs(userRecipesCollection);
-        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
+        return querySnapshot.docs
+            .filter(doc => doc.id !== MEAL_PLAN_DOC_ID) // Exclude the special meal plan document
+            .map(doc => ({ id: doc.id, ...doc.data() } as Recipe));
     } catch (e) {
         console.error("Error getting recipes: ", e);
         throw new Error("Could not fetch recipes.");
@@ -136,12 +139,12 @@ export const deleteShoppingListItems = async (userId: string, itemIds: string[])
 
 export const getMealPlan = async (userId: string): Promise<MealPlan> => {
     try {
-        // Fetch the meal plan from a field on the user document itself.
-        // This avoids needing separate Firestore permissions for a subcollection.
-        const userDocRef = doc(db, USERS_COLLECTION, userId);
-        const docSnap = await getDoc(userDocRef);
-        if (docSnap.exists() && docSnap.data().mealPlan) {
-            return docSnap.data().mealPlan as MealPlan;
+        // Workaround: Store the meal plan in a special doc within the 'recipes' collection
+        // to leverage existing security rules and avoid permissions errors.
+        const planDocRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, MEAL_PLAN_DOC_ID);
+        const docSnap = await getDoc(planDocRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as MealPlan;
         }
         return {}; // Return empty object if no plan exists yet
     } catch (e) {
@@ -152,10 +155,9 @@ export const getMealPlan = async (userId: string): Promise<MealPlan> => {
 
 export const updateMealPlan = async (userId: string, mealPlan: MealPlan): Promise<void> => {
     try {
-        // Update the mealPlan field on the user document.
-        const userDocRef = doc(db, USERS_COLLECTION, userId);
-        // Using set with merge:true adds/updates the mealPlan field without overwriting other user data.
-        await setDoc(userDocRef, { mealPlan }, { merge: true });
+        // Workaround: Update the special meal plan doc in the 'recipes' collection.
+        const planDocRef = doc(db, USERS_COLLECTION, userId, RECIPES_SUBCOLLECTION, MEAL_PLAN_DOC_ID);
+        await setDoc(planDocRef, mealPlan);
     } catch (e) {
         console.error("Error updating meal plan: ", e);
         throw new Error("Could not update meal plan.");

@@ -60,11 +60,12 @@ export const ShoppingList: React.FC<ShoppingListProps> = ({ items, onToggleItem,
                     </div>
 
                     <div className="space-y-6">
-                        {Object.entries(groupedItems).map(([recipeName, recipeItems]) => (
+                        {/* FIX: Use Object.keys and direct property access to avoid type inference issues with Object.entries in some environments. */}
+                        {Object.keys(groupedItems).map((recipeName) => (
                              <div key={recipeName} className="bg-[--card] p-6 rounded-2xl shadow-lg border border-[--border]">
                                 <h3 className="text-lg font-semibold mb-4 text-[--foreground] border-b border-[--border] pb-2">{recipeName}</h3>
                                 <ul className="space-y-3">
-                                    {recipeItems.map(item => (
+                                    {groupedItems[recipeName].map(item => (
                                         <li key={item.id}>
                                             <label className="flex items-center gap-3 cursor-pointer group">
                                                 <input
